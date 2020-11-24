@@ -1,28 +1,59 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <Comment :data="data" />
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
+import Comment from '@/components/Comment'
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    Comment
+  },
+  data: () => ({
+    data: []
+  }),
+  created() {
+    setTimeout(() => {
+      this.data = [
+        {
+          content: '测试1',
+          visitor: { name: '冯风风' },
+          created: '2020.11.24',
+          children: [
+            {
+              content: '回复1',
+              visitor: { name: 'NARUTO' },
+              created: '2020.11.25'
+            },
+            {
+              content: '回复2',
+              visitor: { name: 'NARUTO' },
+              created: '2020.11.25'
+            }
+          ]
+        },
+        {
+          content: '测试2',
+          visitor: { name: '冯风风' },
+          created: '2020.11.21',
+          children: [
+            {
+              content: '回复1',
+              visitor: { name: 'NARUTO' },
+              created: '2020.11.23'
+            }
+          ]
+        }
+      ]
+    }, 500)
   }
 }
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+html {
+  font-size: 12px;
 }
 </style>

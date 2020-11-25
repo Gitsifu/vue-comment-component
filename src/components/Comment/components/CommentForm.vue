@@ -1,9 +1,5 @@
 <template>
-  <div
-    class="comment-form"
-    :class="{ 'reply': parentId !== '' && parentId !== id }"
-    @click.stop
-  >
+  <div class="comment-form">
     <div class="avatar-box">
       <img src="../../../assets/image/avatar3.jpg" alt="">
     </div>
@@ -18,15 +14,16 @@
           :placeholder="placeholder"
           @input="handleInput"
           @focus="handleFocus"
+          @blur="handleBlur"
         />
       </div>
-      <div v-show="focus || value" class="option-box">
+      <div
+        v-show="focus || value"
+        class="option-box"
+        @mousedown.prevent="$refs['rich-input'].focus()"
+      >
         <slot name="submitBtn">
-          <button
-            class="submit-btn"
-            :disabled="!value"
-            @click="submit"
-          >
+          <button class="submit-btn" :disabled="!value" @click.stop="handleSubmit">
             评论
           </button>
         </slot>
@@ -38,88 +35,76 @@
 <script>
 export default {
   name: 'CommentForm',
-  inject: ['comment'],
   props: {
     placeholder: {
       type: String,
       default: '输入评论...'
     },
-    autofocus: {
-      type: Boolean,
-      default: false
-    },
     id: {
       type: [String, Number],
-      default: 'comment-0'
-    },
-    parentId: {
-      type: [String, Number],
-      default: ''
+      default: 'comment-root'
     }
   },
   data() {
     return {
-      focus: false, // 是否聚焦
-      value: ''
+      focus: false, // * 聚焦状态
+      value: '' // * 输入框值
+    }
+  },
+  computed: {
+    isRoot() {
+      return this.id === 'comment-root'
     }
   },
   mounted() {
-    this.init()
+    if (!this.isRoot) {
+      // 自动聚焦
+      this.$refs['rich-input'].focus()
+    }
   },
   methods: {
-    init() {
-      if (this.autofocus) {
-        this.$refs.input.focus() // 自动聚焦
-      }
-
-      this.$watch('comment.focusId', (id) => {
-        // 监听当前聚焦的输入框id变化
-        if (id !== this.id) {
-          this.close()
-        }
-      })
-    },
     handleInput(e) {
       this.value = e.target.innerText
     },
-    submit() {
-      // 提交评论或回复
+    handleFocus() {
+      this.focus = true
+    },
+    handleBlur() {
+      if (this.value) return
+
+      if (this.isRoot) {
+        // 顶部表单特殊处理
+        this.focus = false
+        return
+      }
+      this.close()
+    },
+    handleSubmit() {
       if (!this.value) return
 
       const data = {
+        id: this.id,
         content: this.value,
         callback: () => {
-          this.reset()
+          this.id === 'comment-root' ? this.reset() : this.close()
         }
       }
 
-      this.comment.$emit('submit', data)
+      this.$emit('form-submit', data)
     },
     reset() {
-      // 重置
-      this.$refs['rich-input'].innerHTML = ''
       this.value = ''
-      this.close()
-    },
-    handleFocus() {
-      // 聚焦
-      this.comment.focusId = this.id
-      this.focus = true
+      this.$refs['rich-input'].innerHTML = null
+      this.$refs['rich-input'].blur()
     },
     close() {
-      // 关闭输入框
-      if (!this.focus) return
-      if (!this.value) {
-        this.focus = false
-        this.comment.removeInputBox(this.id)
-      }
+      this.$emit('form-delete', this.id)
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-
 .comment-form {
   max-width: 100%;
   padding: 1rem 1.333rem;
@@ -181,7 +166,7 @@ export default {
         outline: none;
         border: none;
         cursor: pointer;
-        transition: all .3s;
+        transition: all 0.3s;
         &:hover {
           background-color: #0371df;
         }

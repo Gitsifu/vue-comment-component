@@ -43,9 +43,14 @@
                   />
                 </g>
               </svg>
-              <span v-if="comment.likes" class="action-title">{{ comment.likes }}</span>
+              <span v-if="comment.likes" class="action-title">{{
+                comment.likes
+              }}</span>
             </div>
-            <div class="comment-action action">
+            <div
+              class="comment-action action"
+              @mousedown.prevent="$emit('comment-reply', id)"
+            >
               <svg
                 aria-hidden="true"
                 width="16"
@@ -66,9 +71,10 @@
             </div>
           </div>
         </div>
-        <slot />
+        <slot :id="id" />
+
         <div class="sub-comment-list">
-          <slot name="subCommentList" />
+          <slot name="replyList" :parentId="id" />
         </div>
       </div>
     </div>
@@ -76,14 +82,16 @@
 </template>
 
 <script>
-// import CommentForm from './CommentForm'
 export default {
   name: 'CommentItem',
-  // components: { CommentForm },
   props: {
     comment: {
       type: Object,
       default: () => {}
+    },
+    id: {
+      type: [String, Number],
+      default: ''
     },
     parentId: {
       type: [String, Number],
@@ -165,9 +173,9 @@ export default {
   }
 }
 .sub-comment-list {
-    margin: 1rem 0;
-    padding: 0 0 0 1rem;
-    background-color: #fafbfc;
-    border-radius: 3px;
+  margin: 1rem 0;
+  padding: 0 0 0 1rem;
+  background-color: #fafbfc;
+  border-radius: 3px;
 }
 </style>

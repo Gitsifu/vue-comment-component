@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <Comment :data="data" />
+    <Comment v-model="data" :handle-submit="submit" />
   </div>
 </template>
 
@@ -48,6 +48,16 @@ export default {
         }
       ]
     }, 500)
+  },
+  methods: {
+    async submit({ content }) {
+      await new Promise(resolve => {
+        setTimeout(() => {
+          // resolve(content)
+          throw new Error('error')
+        }, 1000)
+      })
+    }
   }
 }
 </script>

@@ -1,7 +1,7 @@
 <template>
-  <div class="comment-form">
+  <div :class="`${className} comment-form`">
     <div class="avatar-box">
-      <img src="../../../assets/image/avatar3.jpg" alt="">
+      <slot />
     </div>
     <div class="form-box">
       <div class="rich-input-wrap" :class="{ focus: focus || value }">
@@ -23,7 +23,11 @@
         @mousedown.prevent="$refs['rich-input'].focus()"
       >
         <slot name="submitBtn">
-          <button class="submit-btn" :disabled="!value" @click.stop="handleSubmit">
+          <button
+            class="submit-btn"
+            :disabled="!value"
+            @click.stop="handleSubmit"
+          >
             评论
           </button>
         </slot>
@@ -43,6 +47,14 @@ export default {
     id: {
       type: [String, Number],
       default: 'comment-root'
+    },
+    className: {
+      type: String,
+      default: ''
+    },
+    comment: {
+      type: Object,
+      default: () => {}
     }
   },
   data() {
@@ -52,14 +64,14 @@ export default {
     }
   },
   computed: {
+    // 是否为顶部评论表单
     isRoot() {
       return this.id === 'comment-root'
     }
   },
   mounted() {
     if (!this.isRoot) {
-      // 自动聚焦
-      this.$refs['rich-input'].focus()
+      this.$refs['rich-input'].focus() // 自动聚焦
     }
   },
   methods: {
@@ -81,12 +93,15 @@ export default {
     },
     handleSubmit() {
       if (!this.value) return
+      const user = this.comment && this.comment.user || null
 
       const data = {
         id: this.id,
         content: this.value,
+        reply: this.id.split('-').length === 3 && JSON.parse(JSON.stringify(user)), // 子回复
+        createAt: new Date().getTime(),
         callback: () => {
-          this.id === 'comment-root' ? this.reset() : this.close()
+          this.isRoot ? this.reset() : this.close()
         }
       }
 
@@ -107,19 +122,14 @@ export default {
 <style lang="scss" scoped>
 .comment-form {
   max-width: 100%;
-  padding: 1rem 1.333rem;
+  padding: 1em 1.333em;
   display: flex;
   background-color: #fafbfc;
   border-radius: 3px;
-  &.reply {
-    .avatar-box {
-      display: none;
-    }
-  }
   .avatar-box {
     flex: 0 0 auto;
     img {
-      margin: 0 1rem 0 0;
+      margin: 0 1em 0 0;
     }
   }
   .form-box {
@@ -134,10 +144,10 @@ export default {
       }
       .rich-input {
         outline: none;
-        padding: 0.6rem 1rem;
+        padding: 0.57em 0.95em;
         min-height: 1.3em;
-        line-height: 1.7;
-        font-size: 1.083rem;
+        line-height: 1.75;
+        font-size: 1.38em;
         color: #17181a;
         word-break: break-word;
         touch-action: none;
@@ -153,13 +163,13 @@ export default {
       }
     }
     .option-box {
-      margin-top: 0.65rem;
+      margin-top: 0.65em;
       display: flex;
       .submit-btn {
         flex: 0 0 auto;
         margin-left: auto;
-        padding: 0.5rem 1.3rem;
-        font-size: 1.25rem;
+        padding: 0.4em 1.04em;
+        font-size: 1.63em;
         color: #fff;
         background-color: #027fff;
         border-radius: 2px;
@@ -175,6 +185,17 @@ export default {
           cursor: default;
         }
       }
+    }
+  }
+  &.reply {
+    margin-top: 1.083em;
+    padding: 1em;
+    &.sub-reply {
+      background-color: #fff;
+      border: 1px solid #f1f1f2;
+    }
+    .avatar-box {
+      display: none;
     }
   }
 }

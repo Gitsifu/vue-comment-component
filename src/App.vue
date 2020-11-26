@@ -1,6 +1,11 @@
 <template>
   <div id="app">
-    <Comment v-model="data" :handle-submit="submit" />
+    <Comment
+      v-model="data"
+      :user="user"
+      :before-submit="submit"
+      :before-like="like"
+    />
   </div>
 </template>
 
@@ -12,37 +17,42 @@ export default {
     Comment
   },
   data: () => ({
-    data: []
+    data: [],
+    user: {
+      name: 'user',
+      avatar: require('./assets/image/comment.png')
+    }
   }),
   created() {
     setTimeout(() => {
       this.data = [
         {
           content: '测试1',
-          visitor: { name: '冯风风' },
-          created: '2020.11.24',
+          user: { name: '冯风风' },
+          createAt: '2020.11.24',
+          likes: 1,
           children: [
             {
               content: '回复1',
-              visitor: { name: 'NARUTO' },
-              created: '2020.11.25'
+              user: { name: 'NARUTO' },
+              createAt: '2020.11.25'
             },
             {
               content: '回复2',
-              visitor: { name: 'NARUTO' },
-              created: '2020.11.25'
+              user: { name: 'NARUTO' },
+              createAt: '2020.11.25'
             }
           ]
         },
         {
           content: '测试2',
-          visitor: { name: '冯风风' },
-          created: '2020.11.21',
+          user: { name: '冯风风' },
+          createAt: '2020.11.21',
           children: [
             {
               content: '回复1',
-              visitor: { name: 'NARUTO' },
-              created: '2020.11.23'
+              user: { name: 'NARUTO' },
+              createAt: '2019.1.23'
             }
           ]
         }
@@ -50,20 +60,22 @@ export default {
     }, 500)
   },
   methods: {
-    async submit({ content }) {
-      await new Promise(resolve => {
+    async submit(info) {
+      await new Promise((resolve) => {
         setTimeout(() => {
-          // resolve(content)
-          throw new Error('error')
-        }, 1000)
+          resolve()
+          console.log(info)
+        }, 0)
+      })
+    },
+    async like(comment) {
+      await new Promise((resolve) => {
+        setTimeout(() => {
+          resolve()
+          console.log(comment)
+        }, 0)
       })
     }
   }
 }
 </script>
-
-<style>
-html {
-  font-size: 12px;
-}
-</style>

@@ -3,6 +3,7 @@
     <!-- 顶部评论表单区域 -->
     <comment-form class-name="comment-root" @form-submit="formSubmit">
       <img
+        class="avatar"
         :src="user.avatar || ''"
         @error="(e) => e.target.classList.add('error')"
       >
@@ -107,10 +108,17 @@ export default {
       forms: [] // 显示在视图上的表单id数组
     }
   },
+  // mounted() {
+  //   window.addEventListener('blur', (e) => {
+  //     console.log('blur')
+  //     this.dispatchBlur(this)
+  //   }, true)
+  // },
   methods: {
     // * 点击回复按钮，判断是否已存在该id的表单，存在删除该表单，不存在则新增该表单，并触发其他表单blur事件
     hasForm(id) {
       this.forms.includes(id) ? this.deleteForm(id) : this.addForm(id)
+      console.log('点击回复')
       this.dispatchBlur(this.$refs['comment-list'].$children, id)
     },
     // * 增加新表单
@@ -199,7 +207,7 @@ export default {
     },
     // * 向下递归触发表单blur事件
     dispatchBlur(target, id) {
-      if (target.id === id) return
+      if (id && target.id === id) return
 
       if (Array.isArray(target)) {
         target.map((c) => this.dispatchBlur(c, id))
@@ -207,6 +215,7 @@ export default {
         const children = target.$children
         children && this.dispatchBlur(children, id)
 
+        // target.handleBlur && target.handleBlur()
         const richInput = target.$refs['rich-input']
         richInput && richInput.blur()
       }
@@ -217,13 +226,13 @@ export default {
 
 <style lang="scss" scoped>
 #comment {
-  font-size: calc(12px + 4 * ((100vw - 1600px) / (1600 - 320)));
-  margin-top: 2em;
+  border-top: 1px solid #ebebeb;
+  padding-top: 1.0664rem;
   & > .comment-form {
-    margin: 0 1.666em 1.333em;
+    margin: 0 1.3328rem 1.0664rem;
   }
   & > .comment-list {
-    margin: 0 1.666em 0 6.5em;
+    margin: 0 1.3328rem 0 6.5rem;
     background-color: #fff;
   }
 
@@ -231,10 +240,12 @@ export default {
     img {
       user-select: none;
       -webkit-user-drag: none;
-      width: 3.5em;
-      height: 3.5em;
+      width: 2.1336rem;
+      height: 2.1336rem;
       border-radius: 50%;
-      cursor: pointer;
+      &.avatar {
+        cursor: pointer;
+      }
       &.error {
         display: inline-block;
         transform: scale(0.5);
@@ -251,7 +262,9 @@ export default {
           border: 1px solid #e7e7e7;
           box-sizing: border-box;
           transform: scale(2);
-          background: #f5f5f5 url('../../assets/image/break.svg') no-repeat center / 50% 50%;
+          background: #f5f5f5
+            url("data:image/svg+xml,%3Csvg class='icon' viewBox='0 0 1024 1024' xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cpath d='M304.128 456.192c48.64 0 88.064-39.424 88.064-88.064s-39.424-88.064-88.064-88.064-88.064 39.424-88.064 88.064 39.424 88.064 88.064 88.064zm0-116.224c15.36 0 28.16 12.288 28.16 28.16s-12.288 28.16-28.16 28.16-28.16-12.288-28.16-28.16 12.288-28.16 28.16-28.16z' fill='%23e6e6e6'/%3E%3Cpath d='M887.296 159.744H136.704C96.768 159.744 64 192 64 232.448v559.104c0 39.936 32.256 72.704 72.704 72.704h198.144L500.224 688.64l-36.352-222.72 162.304-130.56-61.44 143.872 92.672 214.016-105.472 171.008h335.36C927.232 864.256 960 832 960 791.552V232.448c0-39.936-32.256-72.704-72.704-72.704zm-138.752 71.68v.512H857.6c16.384 0 30.208 13.312 30.208 30.208v399.872L673.28 408.064l75.264-176.64zM304.64 792.064H165.888c-16.384 0-30.208-13.312-30.208-30.208v-9.728l138.752-164.352 104.96 124.416-74.752 79.872zm81.92-355.84l37.376 228.864-.512.512-142.848-169.984c-3.072-3.584-9.216-3.584-12.288 0L135.68 652.8V262.144c0-16.384 13.312-30.208 30.208-30.208h474.624L386.56 436.224zm501.248 325.632c0 16.896-13.312 30.208-29.696 30.208H680.96l57.344-93.184-87.552-202.24 7.168-7.68 229.888 272.896z' fill='%23e6e6e6'/%3E%3C/svg%3E")
+            no-repeat center / 50% 50%;
         }
       }
     }
@@ -261,10 +274,10 @@ export default {
 @media screen and (max-width: 600px) {
   #comment {
     & > .comment-list {
-      margin: 0 2em;
+      margin: 0 1.6rem;
     }
     & > .comment-form {
-      margin: 1.25em 2em;
+      margin: 1rem 1.6rem;
     }
     & > ::v-deep .comment-root .avatar-box {
       display: none;

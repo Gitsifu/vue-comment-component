@@ -18,16 +18,10 @@
         </div>
 
         <!-- 评论或回复内容 -->
-        <div class="content">
-          <span
-            v-if="comment.reply"
-          >回复
-            <span
-              v-if="comment.reply"
-              class="reply-target"
-              style="color: #406599"
-              :title="comment.reply.email"
-            >{{ comment.reply.name + '：' }}</span></span>{{ comment.content }}
+        <div ref="content" class="content">
+          <span v-if="comment.reply" class="reply">回复
+            <span class="reply-target" :title="comment.reply.email">{{ comment.reply.name + '：' }}</span>
+          </span>
         </div>
 
         <!-- 评论或回复时间及操作 -->
@@ -55,7 +49,7 @@
                   <path
                     :stroke="comment.liked ? '#37C700' : '#8A93A0'"
                     stroke-linejoin="round"
-                    fill="currentColor"
+                    :fill="comment.liked ? '#37c700' : 'none'"
                     d="M4.58 8.25V17h-1.4C2.53 17 2 16.382 2 15.624V9.735c0-.79.552-1.485 1.18-1.485h1.4zM11.322 2c1.011.019 1.614.833 1.823 1.235.382.735.392 1.946.13 2.724-.236.704-.785 1.629-.785 1.629h4.11c.434 0 .838.206 1.107.563.273.365.363.84.24 1.272l-1.86 6.513A1.425 1.425 0 0 1 14.724 17H6.645V7.898C8.502 7.51 9.643 4.59 9.852 3.249A1.47 1.47 0 0 1 11.322 2z"
                   />
                 </g>
@@ -67,6 +61,7 @@
             <div
               class="comment-action action"
               @mousedown.prevent="$emit('comment-reply', id)"
+              @click.prevent
             >
               <svg
                 aria-hidden="true"
@@ -119,6 +114,9 @@ export default {
       return this.id.split('-').length === 2
     }
   },
+  mounted() {
+    this.$refs['content'].insertAdjacentHTML('beforeend', this.comment.content)
+  },
   methods: {
     formatTime(time, local = false) {
       const d = new Date(time)
@@ -150,7 +148,7 @@ export default {
 
 <style lang="scss" scoped>
 .comment-item {
-  margin-bottom: 1.333em;
+  margin-bottom: 1.0664rem;
   &:not(:last-child) {
     .content-box {
       border-bottom: 1px solid #f1f1f1;
@@ -159,30 +157,34 @@ export default {
   .comment {
     display: flex;
     .content-box {
-      margin-left: 0.833em;
+      margin-left: .6664rem;
       flex: 1 1 auto;
+      &.focus {
+        padding-bottom: .4rem;
+      }
       .meta-box {
         display: flex;
         align-items: center;
-        font-size: 1.407em;
+        font-size: 0.8664rem;
         line-height: 1.25;
         white-space: nowrap;
         cursor: pointer;
       }
       .content {
-        margin-top: 0.55em;
-        font-size: 1.407em;
-        line-height: 1.833em;
+        margin-top: .44rem;
+        font-size: .8664rem;
+        line-height: 1.4664rem;
         word-wrap: break-word;
         white-space: pre-wrap;
         color: #505050;
         overflow: hidden;
+        .reply {
+          vertical-align: top;
+        }
         .reply-target {
           cursor: pointer;
+          color: #406599;
         }
-      }
-      &.focus {
-        padding-bottom: 0.5em;
       }
     }
     .reply-stat {
@@ -190,12 +192,12 @@ export default {
       margin-top: 7px;
       font-weight: 400;
       time {
-        font-size: 1.407em;
+        font-size: .8664rem;
         color: #8a9aa9;
         cursor: text;
       }
       .delete {
-        font-size: 1.407em;
+        font-size: .8664rem;
         color: #8a9aa9;
         cursor: default;
       }
@@ -204,29 +206,29 @@ export default {
         display: flex;
         justify-content: space-between;
         margin-left: auto;
-        min-width: 11em;
+        min-width: 7.04rem;
         color: #8a93a0;
         user-select: none;
         .action {
           display: flex;
           align-items: center;
-          margin-left: 0.5em;
+          margin-left: .4rem;
           cursor: pointer;
           &:hover {
-            opacity: 0.8;
+            opacity: .8;
           }
           &.active {
             color: #37c700;
           }
           .icon {
-            min-width: 16px;
-            min-height: 16px;
-            width: 1.666em;
-            height: 1.666em;
+            min-width: 16.5px;
+            min-height: 16.5px;
+            width: .8rem;
+            height: .8rem;
           }
           .action-title {
-            margin-left: 0.25em;
-            font-size: 1.407em;
+            margin-left: .2rem;
+            font-size: .8rem;
           }
         }
       }
@@ -234,8 +236,8 @@ export default {
   }
 }
 .sub-comment-list {
-  margin: 1em 0;
-  padding: 0 0 0 1em;
+  margin: .8rem 0;
+  padding: 0 0 0 .8rem;
   background-color: #fafbfc;
   border-radius: 3px;
   .comment-item {
@@ -245,11 +247,11 @@ export default {
     }
     .comment {
       position: relative;
-      padding: 1em 0 0;
+      padding: .8rem 0 0;
 
       .content-box {
-        margin-right: 1em;
-        padding-bottom: 12px;
+        margin-right: .8rem;
+        padding-bottom: .8rem;
       }
     }
   }

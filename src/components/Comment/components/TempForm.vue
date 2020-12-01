@@ -4,18 +4,18 @@
       <slot />
     </div>
     <div class="form-box">
-      <div class="rich-input" :class="{ focus: focus || value }">
-        <div class="grow-wrap" :data-replicated-value="value">
-          <textarea
-            ref="input"
-            rows="1"
-            :value="value"
-            :placeholder="placeholder"
-            @input="(e) => (value = e.target.value)"
-            @focus="focus = true"
-            @blur="handleBlur"
-          />
-        </div>
+      <div class="rich-input-wrap" :class="{ focus: focus || value }">
+        <div
+          ref="rich-input"
+          class="rich-input"
+          contenteditable="true"
+          spellcheck="false"
+          disabled="disabled"
+          :placeholder="placeholder"
+          @input="handleInput"
+          @focus="handleFocus"
+          @blur="handleBlur"
+        />
         <div v-show="imgStr" ref="image-preview-box" class="image-preview-box">
           <div class="clean-btn" @mousedown.prevent="removeImg">
             <svg
@@ -46,41 +46,8 @@
       <div
         v-show="focus || value || imgStr"
         class="option-box"
-        @mousedown.prevent="$refs.input.focus()"
+        @mousedown.prevent="$refs['rich-input'].focus()"
       >
-        <div class="emoji emoji-btn">
-          <div class="emoji-box">
-            <div
-              data-src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDIyIDIyIj4KICAgIDxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPHBhdGggZD0iTTEgMWgyMHYyMEgxeiIvPgogICAgICAgIDxwYXRoIGZpbGw9IiMwMjdGRkYiIGZpbGwtcnVsZT0ibm9uemVybyIgZD0iTTExIDE4LjQzOGE3LjQzOCA3LjQzOCAwIDEgMCAwLTE0Ljg3NiA3LjQzOCA3LjQzOCAwIDAgMCAwIDE0Ljg3NnptMCAxLjA2MmE4LjUgOC41IDAgMSAxIDAtMTcgOC41IDguNSAwIDAgMSAwIDE3ek03LjgxMiA5LjkzN2ExLjA2MiAxLjA2MiAwIDEgMCAwLTIuMTI0IDEuMDYyIDEuMDYyIDAgMCAwIDAgMi4xMjV6bTYuMzc1IDBhMS4wNjMgMS4wNjMgMCAxIDAgMC0yLjEyNSAxLjA2MyAxLjA2MyAwIDAgMCAwIDIuMTI1ek0xMSAxNi4yMzJhMy4yNyAzLjI3IDAgMCAwIDMuMjctMy4yN0g3LjczYTMuMjcgMy4yNyAwIDAgMCAzLjI3IDMuMjd6Ii8+CiAgICA8L2c+Cjwvc3ZnPgo="
-              class="lazy icon loaded immediate"
-              style="background-image: url(&quot;data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDIyIDIyIj4KICAgIDxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPHBhdGggZD0iTTEgMWgyMHYyMEgxeiIvPgogICAgICAgIDxwYXRoIGZpbGw9IiMwMjdGRkYiIGZpbGwtcnVsZT0ibm9uemVybyIgZD0iTTExIDE4LjQzOGE3LjQzOCA3LjQzOCAwIDEgMCAwLTE0Ljg3NiA3LjQzOCA3LjQzOCAwIDAgMCAwIDE0Ljg3NnptMCAxLjA2MmE4LjUgOC41IDAgMSAxIDAtMTcgOC41IDguNSAwIDAgMSAwIDE3ek03LjgxMiA5LjkzN2ExLjA2MiAxLjA2MiAwIDEgMCAwLTIuMTI0IDEuMDYyIDEuMDYyIDAgMCAwIDAgMi4xMjV6bTYuMzc1IDBhMS4wNjMgMS4wNjMgMCAxIDAgMC0yLjEyNSAxLjA2MyAxLjA2MyAwIDAgMCAwIDIuMTI1ek0xMSAxNi4yMzJhMy4yNyAzLjI3IDAgMCAwIDMuMjctMy4yN0g3LjczYTMuMjcgMy4yNyAwIDAgMCAzLjI3IDMuMjd6Ii8+CiAgICA8L2c+Cjwvc3ZnPgo=&quot;);"
-            />
-            <span>表情</span>
-          </div>
-        </div>
-        <div class="image-btn">
-          <svg
-            aria-hidden="true"
-            width="22"
-            height="22"
-            viewBox="0 0 22 22"
-            class="icon image-icon"
-          >
-            <g fill="none" fill-rule="evenodd">
-              <path d="M1 1h20v20H1z" />
-              <g transform="translate(2 3)">
-                <path
-                  stroke="#027FFF"
-                  stroke-width=".9"
-                  d="M2.28.667h13.44c1.075 0 1.947.871 1.947 1.946v10.774a1.947 1.947 0 0 1-1.947 1.946H2.28a1.947 1.947 0 0 1-1.947-1.946V2.613c0-1.075.872-1.946 1.947-1.946zM.333 12.499L5 8l9.01 7.333m-6.343-4.842L10.333 8l7.136 5.914"
-                />
-                <circle cx="13.5" cy="4.5" r="1.5" fill="#027FFF" />
-              </g>
-            </g>
-          </svg>
-          <span>图片</span>
-          <!-- <input ref="read-file" class="read-file" type="file" @change="readFile"> -->
-        </div>
         <slot name="submitBtn">
           <button
             class="submit-btn"
@@ -130,7 +97,7 @@ export default {
     }
   },
   mounted() {
-    const richInput = this.$refs.input
+    const richInput = this.$refs['rich-input']
     !this.isRoot && richInput.focus() // 自动聚焦
 
     richInput.addEventListener('paste', this.handlePaste)
@@ -139,9 +106,12 @@ export default {
     )
   },
   methods: {
-    // readFile(e) {
-    //   this.focus = true
-    // },
+    handleInput(e) {
+      this.value = e.target.innerText.replace(/\n+/g, '\n')
+    },
+    handleFocus() {
+      this.focus = true
+    },
     handleBlur() {
       if (this.value || this.imgStr) return
 
@@ -171,6 +141,16 @@ export default {
     },
     handlePaste(e) {
       const cD = e.clipboardData
+      if (!cD) return
+
+      const specialTypes = ['Files', 'vscode-editor-data'] // 需要特殊处理的类型
+      for (const t in specialTypes) {
+        if (cD.types.includes(t)) {
+          e.preventDefault()
+          break
+        }
+      }
+
       // 粘贴图片
       const img = cD.files[0]
       if (img) {
@@ -178,6 +158,58 @@ export default {
         e.preventDefault()
         return
       }
+
+      // 从vscode粘贴
+      const isCopyFromVscode = cD.types.includes('vscode-editor-data')
+      if (isCopyFromVscode) {
+        const text = cD.getData('text')
+        this.handlePasteString(text)
+        e.preventDefault()
+        return
+      }
+    },
+    // 粘贴文字
+    handlePasteString(str) {
+      const selection = window.getSelection()
+      const textList = this.html2Escape(str).split(/\n/g) // 字符转为实体，并以换行符切割为数组
+
+      let htmlStr // html字符串
+      let node // DOM节点
+
+      // 处理单行
+      if (textList.length === 1 && textList[0]) {
+        htmlStr = textList[0].replace(/\n+/g, '\n')
+        node = document.createTextNode(htmlStr)
+      } else {
+        // 处理多行
+        htmlStr = textList.reduce((pre, cur, i) => {
+          // cur = cur.replace(/^\s+/, '') // 去除开头的所有空格
+          cur = cur.replace(/\s/g, '&ensp;')
+          // return (pre += i === 0 ? cur : `<div>${cur}</div>`) // 第一行不处理为div
+          return (pre += `<div>${cur}</div>`)
+        }, '')
+
+        node = document.createRange().createContextualFragment(htmlStr) // 解析字符串为DOM
+        // this.$refs['rich-input'].insertAdjacentHTML('beforeend', htmlStr)
+      }
+
+      this.value += htmlStr
+      selection.deleteFromDocument()
+      selection.getRangeAt(0).insertNode(node)
+      selection.removeAllRanges()
+      this.setFocus(this.$refs['rich-input'])
+    },
+    setFocus(el) {
+      const range = document.createRange()
+      range.selectNodeContents(el)
+      range.collapse(false)
+      const sel = window.getSelection()
+      // 判断光标位置，如不需要可删除
+      if (sel.anchorOffset !== 0) {
+        return
+      }
+      sel.removeAllRanges()
+      sel.addRange(range)
     },
     // 粘贴图片
     handlePasteImg(img, target) {
@@ -204,11 +236,24 @@ export default {
       imgBox.removeChild(imgBox.lastChild)
       this.imgStr = ''
     },
+    // 字符转实体
+    html2Escape(sHtml) {
+      return sHtml.replace(/[<>&"']/g, (c) => {
+        return {
+          '<': '&lt;',
+          '>': '&gt;',
+          '&': '&amp;',
+          '"': '&quot;',
+          "'": '&apos;'
+        }[c]
+      })
+    },
     // 重置
     reset() {
       this.value = ''
       this.imgStr = ''
-      this.$refs.input.blur()
+      this.$refs['rich-input'].innerHTML = null
+      this.$refs['rich-input'].blur()
     },
     // 关闭
     close() {
@@ -233,7 +278,7 @@ export default {
   }
   .form-box {
     flex: 1 1 auto;
-    .rich-input {
+    .rich-input-wrap {
       border-radius: 3px;
       border: 1px solid #f1f1f1;
       background-color: #fff;
@@ -241,40 +286,29 @@ export default {
       &.focus {
         border-color: #007fff;
       }
-      .grow-wrap {
-        display: grid;
-        &::after {
-          content: attr(data-replicated-value) ' ';
-          white-space: pre-wrap;
-          visibility: hidden;
+      .rich-input {
+        outline: none;
+        padding: 0.48rem 0.8rem;
+        min-height: 1.04rem;
+        line-height: 1.7;
+        font-size: 0.8664rem;
+        color: #17181a;
+        word-break: break-word;
+        touch-action: none;
+        &:empty::before {
+          content: attr(placeholder);
+          opacity: 0.4;
+          pointer-events: none;
+          user-select: none;
         }
-        textarea {
-          outline: none;
-          border: none;
-          resize: none;
-          touch-action: none;
-          overflow: hidden;
-          &::placeholder {
-            color: #c2c2c2;
-          }
-        }
-        & > textarea,
-        &::after {
-          font: inherit;
-          grid-area: 1 / 1 / 2 / 2;
-          padding: 0.48rem 0.8rem;
-          min-height: 1.04rem;
-          line-height: 1.7;
-          font-size: 0.8664rem;
-          color: #17181a;
-          box-sizing: border-box;
+        &:enabled:before {
+          content: none;
         }
       }
-
       .image-preview-box {
         display: inline-block;
         position: relative;
-        margin: 0 0.8rem 0.4rem;
+        margin: 0 0.8rem 0.8rem;
         .clean-btn {
           position: absolute;
           top: 0.15rem;
@@ -286,45 +320,6 @@ export default {
     .option-box {
       margin-top: 0.52rem;
       display: flex;
-      align-items: center;
-      color: #027fff;
-      font-size: 0.8664rem;
-      .emoji {
-        position: relative;
-        .emoji-box {
-          display: flex;
-          align-items: center;
-          position: relative;
-          cursor: pointer;
-          .icon {
-            width: 1.2rem;
-            height: 1.2rem;
-            background-repeat: no-repeat;
-            background-size: cover;
-          }
-          &:hover {
-            opacity: 0.8;
-          }
-        }
-      }
-      .image-btn {
-        flex: 0 0 auto;
-        display: flex;
-        align-items: center;
-        margin-left: 20px;
-        cursor: pointer;
-        .icon {
-          margin-right: 0.2664rem;
-          width: 1.2rem;
-          height: 1.2rem;
-        }
-        &:hover {
-          opacity: 0.8;
-        }
-        .read-file {
-          display: none;
-        }
-      }
       .submit-btn {
         flex: 0 0 auto;
         margin-left: auto;

@@ -22,6 +22,7 @@
           <span v-if="comment.reply" class="reply">回复
             <span class="reply-target" :title="comment.reply.email">{{ comment.reply.name + '：' }}</span>
           </span>
+          {{ comment.content }}
         </div>
 
         <!-- 评论或回复时间及操作 -->
@@ -114,9 +115,9 @@ export default {
       return this.id.split('-').length === 2
     }
   },
-  mounted() {
-    this.$refs['content'].insertAdjacentHTML('beforeend', this.comment.content)
-  },
+  // mounted() {
+  //   this.$refs['content'].insertAdjacentHTML('beforeend', this.comment.content)
+  // },
   methods: {
     formatTime(time, local = false) {
       const d = new Date(time)
@@ -168,7 +169,9 @@ export default {
         font-size: 0.8664rem;
         line-height: 1.25;
         white-space: nowrap;
-        cursor: pointer;
+        .user-popover-box {
+          cursor: pointer;
+        }
       }
       .content {
         margin-top: .44rem;

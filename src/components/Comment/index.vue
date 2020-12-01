@@ -108,17 +108,10 @@ export default {
       forms: [] // 显示在视图上的表单id数组
     }
   },
-  // mounted() {
-  //   window.addEventListener('blur', (e) => {
-  //     console.log('blur')
-  //     this.dispatchBlur(this)
-  //   }, true)
-  // },
   methods: {
     // * 点击回复按钮，判断是否已存在该id的表单，存在删除该表单，不存在则新增该表单，并触发其他表单blur事件
     hasForm(id) {
       this.forms.includes(id) ? this.deleteForm(id) : this.addForm(id)
-      console.log('点击回复')
       this.dispatchBlur(this.$refs['comment-list'].$children, id)
     },
     // * 增加新表单
@@ -215,7 +208,6 @@ export default {
         const children = target.$children
         children && this.dispatchBlur(children, id)
 
-        // target.handleBlur && target.handleBlur()
         const richInput = target.$refs['rich-input']
         richInput && richInput.blur()
       }
@@ -232,7 +224,7 @@ export default {
     margin: 0 1.3328rem 1.0664rem;
   }
   & > .comment-list {
-    margin: 0 1.3328rem 0 6.5rem;
+    margin: 0 1.3328rem 0 5.2rem;
     background-color: #fff;
   }
 

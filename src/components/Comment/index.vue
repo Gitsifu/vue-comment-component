@@ -1,7 +1,11 @@
 <template>
   <div id="comment" ref="comment">
     <!-- 顶部评论表单区域 -->
-    <comment-form class-name="comment-root" @form-submit="formSubmit">
+    <comment-form
+      class-name="comment-root"
+      :upload-img="uploadImg"
+      @form-submit="formSubmit"
+    >
       <img
         class="avatar"
         :src="user.avatar || ''"
@@ -16,9 +20,11 @@
         v-for="(comment, i) in data"
         :id="`comment-${i}`"
         :key="`comment-${i}`"
+        :author="author"
         :comment="comment"
         @comment-reply="hasForm"
         @comment-like="handleCommentLike"
+        @comment-delete="handleCommentDelete"
       >
         <!-- 评论表单 -->
         <template #default="{id}">
@@ -27,6 +33,7 @@
             :id="id"
             class-name="reply"
             :placeholder="`回复${comment.user.name}...`"
+            :upload-img="uploadImg"
             @form-submit="formSubmit"
             @form-delete="deleteForm"
           />
@@ -41,8 +48,10 @@
               :id="`${parentId}-${j}`"
               :key="`${parentId}-${j}`"
               :comment="child"
+              :author="author"
               @comment-reply="hasForm"
               @comment-like="handleCommentLike"
+              @comment-delete="handleCommentDelete"
             >
               <!-- 回复表单 -->
               <comment-form
@@ -51,6 +60,7 @@
                 :comment="child"
                 class-name="reply sub-reply"
                 :placeholder="`回复${child.user && child.user.name}...`"
+                :upload-img="uploadImg"
                 @form-delete="deleteForm"
                 @form-submit="formSubmit"
               />
@@ -95,12 +105,26 @@ export default {
     /* 提交表单前事件 */
     beforeSubmit: {
       type: Function,
-      default: () => {}
+      default: null
     },
     /* 执行点赞前事件 */
     beforeLike: {
       type: Function,
-      default: () => {}
+      default: null
+    },
+    /* 执行删除前事件 */
+    beforeDelete: {
+      type: Function,
+      default: null
+    },
+    /* 上传图片 */
+    uploadImg: {
+      type: Function,
+      default: null
+    },
+    author: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -112,7 +136,7 @@ export default {
     // * 点击回复按钮，判断是否已存在该id的表单，存在删除该表单，不存在则新增该表单，并触发其他表单blur事件
     hasForm(id) {
       this.forms.includes(id) ? this.deleteForm(id) : this.addForm(id)
-      this.dispatchBlur(this.$refs['comment-list'].$children, id)
+      this.broadcastBlur(this.$refs['comment-list'].$children, id)
     },
     // * 增加新表单
     addForm(id) {
@@ -126,28 +150,47 @@ export default {
     // * 评论或回复
     async formSubmit({ id, callback, ...params }) {
       // 等待外部提交事件执行
-      try {
-        const res = await this.beforeSubmit(JSON.parse(JSON.stringify(params)))
-        if (res === false) return
-      } catch (e) {
-        throw new Error(e)
+      if (typeof this.beforeSubmit === 'function') {
+        try {
+          const res = await this.beforeSubmit(
+            JSON.parse(JSON.stringify(params))
+          )
+          if (res === false) return
+        } catch (e) {
+          throw new Error(e)
+        }
       }
 
       // 插入评论或回复
-      this.storeData(id, Object.assign(params, { user: this.user }))
+      this.addComment(id, Object.assign(params, { user: this.user }))
       callback()
     },
     // * 点赞
     async handleCommentLike({ id, comment: { children, liked, ...params }}) {
-      try {
-        const data = JSON.parse(JSON.stringify(params))
-        const res = await this.beforeLike(data)
-        if (res === false) return
-      } catch (e) {
-        throw new Error(e)
+      if (typeof this.beforeLike === 'function') {
+        try {
+          const data = JSON.parse(JSON.stringify(params))
+          const res = await this.beforeLike(data)
+          if (res === false) return
+        } catch (e) {
+          throw new Error(e)
+        }
       }
 
       this.storeLikes(id)
+    },
+    // * 删除评论或回复
+    async handleCommentDelete({ id, comment }) {
+      if (typeof this.beforeDelete === 'function') {
+        try {
+          const res = await this.beforeDelete(comment)
+          if (res === false) return
+        } catch (e) {
+          throw new Error(e)
+        }
+      }
+
+      this.deleteComment(id)
     },
     // * 存储点赞
     storeLikes(id) {
@@ -181,7 +224,7 @@ export default {
       this.$emit('input', data)
     },
     // * 存储新评论或回复
-    storeData(id, rawData) {
+    addComment(id, rawData) {
       const commentIndex = id.split('-')[1]
       let data = []
 
@@ -190,6 +233,7 @@ export default {
       } else {
         data = this.data.map((c, i) => {
           if (i === +commentIndex) {
+            if (!Array.isArray(c.children)) c.children = []
             c.children.push(rawData)
           }
           return c
@@ -198,15 +242,33 @@ export default {
 
       this.$emit('input', data)
     },
+    // * 删除评论或回复
+    deleteComment(id) {
+      const commentIndex = id.split('-')[1]
+      const replyIndex = id.split('-')[2]
+
+      const data = this.data.filter((c, i) => {
+        if (!replyIndex && replyIndex !== '0') {
+          return i !== +commentIndex
+        } else {
+          c.children = c.children.filter((r, j) => {
+            return j !== +replyIndex
+          })
+          return c
+        }
+      })
+
+      this.$emit('input', data)
+    },
     // * 向下递归触发表单blur事件
-    dispatchBlur(target, id) {
+    broadcastBlur(target, id) {
       if (id && target.id === id) return
 
       if (Array.isArray(target)) {
-        target.map((c) => this.dispatchBlur(c, id))
+        target.map((c) => this.broadcastBlur(c, id))
       } else {
         const children = target.$children
-        children && this.dispatchBlur(children, id)
+        children && this.broadcastBlur(children, id)
 
         const richInput = target.$refs['rich-input']
         richInput && richInput.blur()
@@ -232,10 +294,10 @@ export default {
     img {
       user-select: none;
       -webkit-user-drag: none;
-      width: 2.1336rem;
-      height: 2.1336rem;
-      border-radius: 50%;
       &.avatar {
+        width: 2.1336rem;
+        height: 2.1336rem;
+        border-radius: 50%;
         cursor: pointer;
       }
       &.error {

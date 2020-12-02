@@ -3,6 +3,7 @@
     <div class="avatar-box">
       <slot />
     </div>
+
     <div class="form-box">
       <div class="rich-input" :class="{ focus: focus || value }">
         <div class="grow-wrap" :data-replicated-value="value">
@@ -12,12 +13,18 @@
             :value="value"
             :placeholder="placeholder"
             @input="(e) => (value = e.target.value)"
-            @focus="focus = true"
+            @focus="handleFocus"
             @blur="handleBlur"
+            @mousedown="handleMousedown"
           />
         </div>
-        <div v-show="imgStr" ref="image-preview-box" class="image-preview-box">
-          <div class="clean-btn" @mousedown.prevent="removeImg">
+        <div v-show="imgSrc" ref="image-preview-box" class="image-preview-box">
+          <div
+            v-show="imgSrc"
+            :style="`background-image: url(${imgSrc})`"
+            class="image"
+          />
+          <div class="clean-btn" @mousedown.prevent="imgSrc = ''">
             <svg
               aria-hidden="true"
               width="15"
@@ -44,11 +51,11 @@
         </div>
       </div>
       <div
-        v-show="focus || value || imgStr"
+        v-show="focus || value || imgSrc"
         class="option-box"
         @mousedown.prevent="$refs.input.focus()"
       >
-        <div class="emoji emoji-btn">
+        <div class="emoji emoji-btn" @mousedown.prevent="openEmojiSelector">
           <div class="emoji-box">
             <div
               data-src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDIyIDIyIj4KICAgIDxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPHBhdGggZD0iTTEgMWgyMHYyMEgxeiIvPgogICAgICAgIDxwYXRoIGZpbGw9IiMwMjdGRkYiIGZpbGwtcnVsZT0ibm9uemVybyIgZD0iTTExIDE4LjQzOGE3LjQzOCA3LjQzOCAwIDEgMCAwLTE0Ljg3NiA3LjQzOCA3LjQzOCAwIDAgMCAwIDE0Ljg3NnptMCAxLjA2MmE4LjUgOC41IDAgMSAxIDAtMTcgOC41IDguNSAwIDAgMSAwIDE3ek03LjgxMiA5LjkzN2ExLjA2MiAxLjA2MiAwIDEgMCAwLTIuMTI0IDEuMDYyIDEuMDYyIDAgMCAwIDAgMi4xMjV6bTYuMzc1IDBhMS4wNjMgMS4wNjMgMCAxIDAgMC0yLjEyNSAxLjA2MyAxLjA2MyAwIDAgMCAwIDIuMTI1ek0xMSAxNi4yMzJhMy4yNyAzLjI3IDAgMCAwIDMuMjctMy4yN0g3LjczYTMuMjcgMy4yNyAwIDAgMCAzLjI3IDMuMjd6Ii8+CiAgICA8L2c+Cjwvc3ZnPgo="
@@ -57,8 +64,12 @@
             />
             <span>表情</span>
           </div>
+          <ImojiSelector
+            v-show="showEmojiSelector"
+            @choose="(v) => (value += v)"
+          />
         </div>
-        <div class="image-btn">
+        <div class="image-btn" @mousedown.prevent="$refs.upload.click()">
           <svg
             aria-hidden="true"
             width="22"
@@ -79,12 +90,18 @@
             </g>
           </svg>
           <span>图片</span>
-          <!-- <input ref="read-file" class="read-file" type="file" @change="readFile"> -->
+          <input
+            ref="upload"
+            class="upload-file"
+            type="file"
+            @change="handleChange"
+            @click="onUpload = true"
+          >
         </div>
         <slot name="submitBtn">
           <button
             class="submit-btn"
-            :disabled="!value && !imgStr"
+            :disabled="!value && !imgSrc"
             @click.stop="handleSubmit"
           >
             评论
@@ -96,8 +113,10 @@
 </template>
 
 <script>
+import ImojiSelector from './ImojiSelector'
 export default {
   name: 'CommentForm',
+  components: { ImojiSelector },
   props: {
     placeholder: {
       type: String,
@@ -114,13 +133,18 @@ export default {
     comment: {
       type: Object,
       default: () => {}
+    },
+    uploadImg: {
+      type: Function,
+      default: null
     }
   },
   data() {
     return {
       focus: false, // * 聚焦状态
       value: '', // * 输入框值
-      imgStr: '' // * 粘贴的图片DOM字符串
+      imgSrc: '', // * 粘贴的图片src
+      showEmojiSelector: false // * 表情选择框状态
     }
   },
   computed: {
@@ -131,7 +155,7 @@ export default {
   },
   mounted() {
     const richInput = this.$refs.input
-    !this.isRoot && richInput.focus() // 自动聚焦
+    !this.isRoot && richInput.focus()
 
     richInput.addEventListener('paste', this.handlePaste)
     this.$once('hook:beforeDestroy', () =>
@@ -139,26 +163,68 @@ export default {
     )
   },
   methods: {
-    // readFile(e) {
-    //   this.focus = true
-    // },
-    handleBlur() {
-      if (this.value || this.imgStr) return
+    handleChange(e) {
+      console.log('upload change')
+      const files = e.target.files
+      if (!(files && files[0])) return
+      this.beforeSetImg(files[0])
+    },
+    async beforeSetImg(file) {
+      if (!/^image/.test(file.type)) {
+        throw new Error("file type must contain 'image'.")
+      }
 
-      if (this.isRoot) {
-        // 顶部表单特殊处理
-        this.focus = false
+      if (typeof this.uploadImg === 'function') {
+        const callback = (src) => {
+          this.imgSrc = src
+        }
+        await this.uploadImg({ file, callback })
         return
       }
-      this.close()
+
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => {
+        this.imgSrc = reader.result
+      }
+      reader.onerror = () => {
+        throw new Error(reader.error)
+      }
+    },
+    handleFocus(e) {
+      this.focus = true
+    },
+    handleBlur(e) {
+      this.showEmojiSelector = false
+
+      if (this.onUpload) {
+        this.$nextTick(() => {
+          this.onUpload = false
+        })
+        return
+      }
+
+      if (this.value || this.imgSrc) return
+
+      this.focus = false
+
+      if (!this.isRoot) {
+        this.close()
+      }
+    },
+    handleMousedown() {
+      if (this.focus) {
+        this.showEmojiSelector = false
+      }
     },
     handleSubmit() {
-      if (!this.value.trim() && !this.imgStr) return
+      if (!this.value.trim() && !this.imgSrc) return
       const user = (this.comment && this.comment.user) || null
 
       const data = {
         id: this.id,
-        content: this.value + this.imgStr,
+        content: this.value,
+        imgSrc: this.imgSrc,
         reply:
           this.id.split('-').length === 3 && JSON.parse(JSON.stringify(user)), // 子回复
         createAt: new Date().getTime(),
@@ -170,49 +236,29 @@ export default {
       this.$emit('form-submit', data)
     },
     handlePaste(e) {
-      const cD = e.clipboardData
-      // 粘贴图片
-      const img = cD.files[0]
-      if (img) {
-        this.handlePasteImg(img, this.$refs['image-preview-box'])
+      const file = e.clipboardData.files[0]
+      if (file) {
+        // 只处理复制图片
+        this.beforeSetImg(file)
         e.preventDefault()
-        return
       }
     },
-    // 粘贴图片
-    handlePasteImg(img, target) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        // 创建包装图片的元素
-        const img = document.createElement('div')
-        img.style.cssText = `width: 5.3336rem; height:5.3336rem; background: url(${e.target.result}) no-repeat; background-size: cover; background-position: 50%;`
-
-        if (target.childElementCount === 2) {
-          this.removeImg() // 移除已有的图片
-        }
-
-        target.appendChild(img) // 添加
-
-        // 修改值
-        this.imgStr = img.outerHTML.replace('width', 'margin-top: .5rem; width')
-      }
-      reader.readAsDataURL(img)
-    },
-    // 移除已粘贴的图片
-    removeImg() {
-      const imgBox = this.$refs['image-preview-box']
-      imgBox.removeChild(imgBox.lastChild)
-      this.imgStr = ''
-    },
-    // 重置
     reset() {
       this.value = ''
-      this.imgStr = ''
+      this.imgSrc = ''
       this.$refs.input.blur()
     },
-    // 关闭
     close() {
       this.$emit('form-delete', this.id)
+    },
+    openEmojiSelector() {
+      this.showEmojiSelector = !this.showEmojiSelector
+
+      if (this.showEmojiSelector) {
+        // 移动光标到末尾
+        const input = this.$refs.input
+        input.selectionStart = input.selectionEnd = this.value.length
+      }
     }
   }
 }
@@ -268,6 +314,7 @@ export default {
           font-size: 0.8664rem;
           color: #17181a;
           box-sizing: border-box;
+          word-break: break-all;
         }
       }
 
@@ -275,6 +322,13 @@ export default {
         display: inline-block;
         position: relative;
         margin: 0 0.8rem 0.4rem;
+        .image {
+          width: 5.3336rem;
+          height: 5.3336rem;
+          background-repeat: no-repeat;
+          background-size: cover;
+          background-position: 50%;
+        }
         .clean-btn {
           position: absolute;
           top: 0.15rem;
@@ -321,9 +375,9 @@ export default {
         &:hover {
           opacity: 0.8;
         }
-        .read-file {
-          display: none;
-        }
+      }
+      .upload-file {
+        display: none;
       }
       .submit-btn {
         flex: 0 0 auto;

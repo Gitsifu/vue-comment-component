@@ -5,6 +5,9 @@
       :user="user"
       :before-submit="submit"
       :before-like="like"
+      :before-delete="deleteComment"
+      :upload-img="uploadImg"
+      author
     />
   </div>
 </template>
@@ -61,20 +64,43 @@ export default {
   },
   methods: {
     async submit(info) {
-      await new Promise((resolve) => {
+      const res = await new Promise((resolve) => {
         setTimeout(() => {
-          resolve()
-          console.log(info)
+          resolve(info)
         }, 0)
       })
+
+      console.log(res)
     },
     async like(comment) {
-      await new Promise((resolve) => {
+      const res = await new Promise((resolve) => {
         setTimeout(() => {
-          resolve()
-          console.log(comment)
+          resolve(comment)
         }, 0)
       })
+
+      console.log(res)
+    },
+    async uploadImg({ file, callback }) {
+      const res = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.readAsDataURL(file)
+        reader.onload = () => {
+          resolve(reader.result)
+        }
+      })
+
+      callback(res)
+      console.log(res)
+    },
+    async deleteComment(comment) {
+      const res = await new Promise((resolve, reject) => {
+        setTimeout(() => {
+          resolve(comment)
+        }, 500)
+      })
+
+      console.log(res)
     }
   }
 }
@@ -96,5 +122,4 @@ html {
     font-size: 18px;
   }
 }
-
 </style>

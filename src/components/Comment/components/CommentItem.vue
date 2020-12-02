@@ -1,5 +1,5 @@
 <template>
-  <div class="comment-item">
+  <div class="comment-item" :class="{ 'sub-comment-item': isSubComment }">
     <div class="comment">
       <!-- 评论或回复人头像 -->
       <img
@@ -19,10 +19,21 @@
 
         <!-- 评论或回复内容 -->
         <div ref="content" class="content">
-          <span v-if="comment.reply" class="reply">回复
-            <span class="reply-target" :title="comment.reply.email">{{ comment.reply.name + '：' }}</span>
+          <span
+            v-if="comment.reply"
+            class="reply"
+          >回复
+            <span class="reply-target" :title="comment.reply.email">{{
+              comment.reply.name + '：'
+            }}</span>
           </span>
           {{ comment.content }}
+          <div v-if="comment.imgSrc" class="img-box">
+            <img
+              :src="comment.imgSrc || ''"
+              @error="(e) => e.target.classList.add('error')"
+            >
+          </div>
         </div>
 
         <!-- 评论或回复时间及操作 -->
@@ -31,9 +42,9 @@
             :title="formatTime(comment.createAt, true)"
             :datetime="comment.createAt"
           >{{ formatTime(comment.createAt) }}</time>
-          <!-- <div class="delete">
-            &nbsp; · &nbsp; 删除
-          </div> -->
+          <div v-if="author" class="delete" @click.stop="$emit('comment-delete', { id, comment })">
+            <span style="margin: 0 .2rem;">·</span>删除
+          </div>
           <div class="action-box">
             <div
               class="like-action action"
@@ -87,7 +98,7 @@
         <slot :id="id" />
 
         <!-- 回复列表 -->
-        <div v-if="hasSubList" class="sub-comment-list">
+        <div v-if="!isSubComment" class="sub-comment-list">
           <slot name="replyList" :parentId="id" />
         </div>
       </div>
@@ -108,16 +119,17 @@ export default {
       type: [String, Number],
       default: '',
       required: true
+    },
+    author: {
+      type: Boolean,
+      default: false
     }
   },
   computed: {
-    hasSubList() {
-      return this.id.split('-').length === 2
+    isSubComment() {
+      return this.id.split('-').length === 3
     }
   },
-  // mounted() {
-  //   this.$refs['content'].insertAdjacentHTML('beforeend', this.comment.content)
-  // },
   methods: {
     formatTime(time, local = false) {
       const d = new Date(time)
@@ -155,13 +167,18 @@ export default {
       border-bottom: 1px solid #f1f1f1;
     }
   }
+  &:hover {
+   .comment .reply-stat .delete {
+      visibility: visible;
+    }
+  }
   .comment {
     display: flex;
     .content-box {
-      margin-left: .6664rem;
+      margin-left: 0.6664rem;
       flex: 1 1 auto;
       &.focus {
-        padding-bottom: .4rem;
+        padding-bottom: 0.4rem;
       }
       .meta-box {
         display: flex;
@@ -174,13 +191,20 @@ export default {
         }
       }
       .content {
-        margin-top: .44rem;
-        font-size: .8664rem;
+        margin-top: 0.44rem;
+        font-size: 0.8664rem;
         line-height: 1.4664rem;
-        word-wrap: break-word;
-        white-space: pre-wrap;
+        white-space: pre-line;
+        word-break: break-all;
         color: #505050;
         overflow: hidden;
+        .img-box {
+          margin-top: 0.5rem;
+          img {
+            max-width: 100%;
+            object-fit: cover;
+          }
+        }
         .reply {
           vertical-align: top;
         }
@@ -194,15 +218,14 @@ export default {
       display: flex;
       margin-top: 7px;
       font-weight: 400;
-      time {
-        font-size: .8664rem;
+      time,
+      .delete {
+        font-size: 0.8664rem;
         color: #8a9aa9;
-        cursor: text;
       }
       .delete {
-        font-size: .8664rem;
-        color: #8a9aa9;
-        cursor: default;
+        visibility: hidden;
+        cursor: pointer;
       }
       .action-box {
         flex: 0 0 auto;
@@ -215,10 +238,10 @@ export default {
         .action {
           display: flex;
           align-items: center;
-          margin-left: .4rem;
+          margin-left: 0.4rem;
           cursor: pointer;
           &:hover {
-            opacity: .8;
+            opacity: 0.8;
           }
           &.active {
             color: #37c700;
@@ -226,12 +249,12 @@ export default {
           .icon {
             min-width: 16.5px;
             min-height: 16.5px;
-            width: .8rem;
-            height: .8rem;
+            width: 0.8rem;
+            height: 0.8rem;
           }
           .action-title {
-            margin-left: .2rem;
-            font-size: .8rem;
+            margin-left: 0.2rem;
+            font-size: 0.8rem;
           }
         }
       }
@@ -239,8 +262,8 @@ export default {
   }
 }
 .sub-comment-list {
-  margin: .8rem 0;
-  padding: 0 0 0 .8rem;
+  margin: 0.8rem 0;
+  padding: 0 0 0 0.8rem;
   background-color: #fafbfc;
   border-radius: 3px;
   .comment-item {
@@ -250,11 +273,11 @@ export default {
     }
     .comment {
       position: relative;
-      padding: .8rem 0 0;
+      padding: 0.8rem 0 0;
 
       .content-box {
-        margin-right: .8rem;
-        padding-bottom: .8rem;
+        margin-right: 0.8rem;
+        padding-bottom: 0.8rem;
       }
     }
   }

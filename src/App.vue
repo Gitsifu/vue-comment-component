@@ -9,7 +9,7 @@
         }}</span>
       </div>
     </div>
-    <div :style="wrapStyle" class="comment-wrap">
+    <div ref="comment" :style="wrapStyle" class="comment-wrap">
       <Comment
         v-model="data"
         :user="currentUser"
@@ -72,7 +72,7 @@ export default {
     }
   },
   created() {
-    this.addData(1)
+    this.addData(3)
   },
   mounted() {
     const header = this.$refs.header
@@ -125,6 +125,7 @@ export default {
       const users = this.users
       const index = users.findIndex((c) => c.name === this.currentUser.name)
       this.currentUser = users[index === users.length - 1 ? 0 : index + 1]
+      this.$refs.comment.scrollTo({ left: 0, top: 0, behavior: 'smooth' })
     },
     addData(times) {
       setTimeout(() => {
@@ -184,6 +185,24 @@ export default {
 </script>
 
 <style lang="scss">
+@mixin scroll-style($thumb:rgba(255, 255, 255, 0.6), $track: rgba(255, 255, 255, 0)) {
+  &::-webkit-scrollbar,
+  &::-webkit-scrollbar-thumb,
+  &::-webkit-scrollbar-track {
+    border: none;
+    box-shadow: none;
+  }
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 2px;
+    background: $thumb;
+  }
+  &::-webkit-scrollbar-track {
+    background: $track;
+  }
+}
 * {
   margin: 0;
   padding: 0;
@@ -249,6 +268,7 @@ html,body,#app {
 
 .comment-wrap {
   overflow: auto;
+  @include scroll-style(#db8f1c,  #b9b9b9)
 }
 
 @media screen and (min-width: 760px) {

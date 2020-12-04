@@ -26,6 +26,7 @@
 
 <script>
 export default {
+  name: 'ImojiSelector',
   data() {
     return {
       currentCat: 'FrequentlyUsed',
@@ -200,11 +201,11 @@ export default {
   border-radius: 2px;
   background-color: #fff;
   box-shadow: 0 5px 18px 0 rgba(0, 0, 0, 0.16);
-  overflow: hidden;
+  box-sizing: content-box;
   .triangle {
     position: absolute;
     top: -0.56rem;
-    left: 15%;
+    left: 14%;
     width: 0;
     height: 0;
     transform: translate(-50%, -50%);

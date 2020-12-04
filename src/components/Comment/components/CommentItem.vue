@@ -42,13 +42,17 @@
             :title="formatTime(comment.createAt, true)"
             :datetime="comment.createAt"
           >{{ formatTime(comment.createAt) }}</time>
-          <div v-if="author" class="delete" @click.stop="$emit('comment-delete', { id, comment })">
+          <div
+            v-if="author"
+            class="delete"
+            @click.stop="$emit('comment-delete', { id, comment })"
+          >
             <span style="margin: 0 .2rem;">·</span>删除
           </div>
           <div class="action-box">
             <div
               class="like-action action"
-              :class="{ active: comment.liked }"
+              :class="{ active: comment._liked }"
               @click.stop="$emit('comment-like', { id, comment })"
             >
               <svg
@@ -59,9 +63,9 @@
                 <g fill="none" fill-rule="evenodd">
                   <path d="M0 0h20v20H0z" />
                   <path
-                    :stroke="comment.liked ? '#37C700' : '#8A93A0'"
+                    :stroke="comment._liked ? '#37C700' : '#8A93A0'"
                     stroke-linejoin="round"
-                    :fill="comment.liked ? '#37c700' : 'none'"
+                    :fill="comment._liked ? '#37c700' : 'none'"
                     d="M4.58 8.25V17h-1.4C2.53 17 2 16.382 2 15.624V9.735c0-.79.552-1.485 1.18-1.485h1.4zM11.322 2c1.011.019 1.614.833 1.823 1.235.382.735.392 1.946.13 2.724-.236.704-.785 1.629-.785 1.629h4.11c.434 0 .838.206 1.107.563.273.365.363.84.24 1.272l-1.86 6.513A1.425 1.425 0 0 1 14.724 17H6.645V7.898C8.502 7.51 9.643 4.59 9.852 3.249A1.47 1.47 0 0 1 11.322 2z"
                   />
                 </g>
@@ -168,7 +172,7 @@ export default {
     }
   }
   &:hover {
-   .comment .reply-stat .delete {
+    .comment .reply-stat .delete {
       visibility: visible;
     }
   }

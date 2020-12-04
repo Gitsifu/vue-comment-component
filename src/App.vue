@@ -1,14 +1,26 @@
 <template>
   <div id="app">
-    <Comment
-      v-model="data"
-      :user="user"
-      :before-submit="submit"
-      :before-like="like"
-      :before-delete="deleteComment"
-      :upload-img="uploadImg"
-      author
-    />
+    <div ref="header" class="change-role">
+      <div class="change" @click="changeUser">切换角色</div>
+      <div class="current-role">
+        <img :src="currentUser.avatar">
+        <span>{{
+          currentUser.name + (isAuthor ? '（作者）' : '（游客）')
+        }}</span>
+      </div>
+    </div>
+    <div :style="wrapStyle" class="comment-wrap">
+      <Comment
+        v-model="data"
+        :user="currentUser"
+        :before-submit="submit"
+        :before-like="like"
+        :before-delete="deleteComment"
+        :upload-img="uploadImg"
+        :author="isAuthor"
+        :props="props"
+      />
+    </div>
   </div>
 </template>
 
@@ -19,48 +31,52 @@ export default {
   components: {
     Comment
   },
-  data: () => ({
-    data: [],
-    user: {
-      name: 'user',
-      avatar: require('./assets/image/comment.png')
+  data() {
+    const users = [
+      {
+        name: 'Up&Up',
+        avatar: require('./assets/image/comment.png')
+      },
+      {
+        name: '天上的黑洞',
+        avatar: require('./assets/image/avatar1.jpg')
+      },
+      {
+        name: '地上的梦龙',
+        avatar: require('./assets/image/avatar3.jpg')
+      },
+      {
+        name: 'NARUTO',
+        avatar: require('./assets/image/avatar2.jpg')
+      }
+    ]
+    return {
+      data: [],
+      props: {
+        content: 'content',
+        imgSrc: 'imgSrc',
+        children: 'childrenComments',
+        likes: 'likes',
+        reply: 'reply',
+        createAt: 'createAt',
+        user: 'visitor'
+      },
+      currentUser: users[0],
+      users,
+      wrapStyle: ''
     }
-  }),
+  },
+  computed: {
+    isAuthor() {
+      return /up/i.test(this.currentUser.name)
+    }
+  },
   created() {
-    setTimeout(() => {
-      this.data = [
-        {
-          content: '测试1',
-          user: { name: '冯风风' },
-          createAt: '2020.11.24',
-          likes: 1,
-          children: [
-            {
-              content: '回复1',
-              user: { name: 'NARUTO' },
-              createAt: '2020.11.25'
-            },
-            {
-              content: '回复2',
-              user: { name: 'NARUTO' },
-              createAt: '2020.11.25'
-            }
-          ]
-        },
-        {
-          content: '测试2',
-          user: { name: '冯风风' },
-          createAt: '2020.11.21',
-          children: [
-            {
-              content: '回复1',
-              user: { name: 'NARUTO' },
-              createAt: '2019.1.23'
-            }
-          ]
-        }
-      ]
-    }, 500)
+    this.addData(1)
+  },
+  mounted() {
+    const header = this.$refs.header
+    this.wrapStyle = `height: calc(100vh - ${header.clientHeight + 20}px)`
   },
   methods: {
     async submit(info) {
@@ -70,7 +86,7 @@ export default {
         }, 0)
       })
 
-      console.log(res)
+      console.log('addComment: ', res)
     },
     async like(comment) {
       const res = await new Promise((resolve) => {
@@ -79,7 +95,7 @@ export default {
         }, 0)
       })
 
-      console.log(res)
+      console.log('likeComment: ', res)
     },
     async uploadImg({ file, callback }) {
       const res = await new Promise((resolve, reject) => {
@@ -88,27 +104,98 @@ export default {
         reader.onload = () => {
           resolve(reader.result)
         }
+        reader.onerror = () => {
+          reject(reader.error)
+        }
       })
 
       callback(res)
-      console.log(res)
+      console.log('uploadImg： ', res)
     },
     async deleteComment(comment) {
-      const res = await new Promise((resolve, reject) => {
+      const res = await new Promise((resolve) => {
         setTimeout(() => {
           resolve(comment)
-        }, 500)
+        }, 0)
       })
 
-      console.log(res)
+      console.log('deleteComment: ', res)
+    },
+    changeUser() {
+      const users = this.users
+      const index = users.findIndex((c) => c.name === this.currentUser.name)
+      this.currentUser = users[index === users.length - 1 ? 0 : index + 1]
+    },
+    addData(times) {
+      setTimeout(() => {
+        this.data = new Array(times)
+          .fill([
+            {
+              content: '测试1',
+              visitor: {
+                name: '天上的黑洞',
+                avatar: require('./assets/image/avatar1.jpg')
+              },
+              createAt: '2020.11.24',
+              likes: 1,
+              childrenComments: [
+                {
+                  content: '回复1',
+                  visitor: {
+                    name: 'NARUTO',
+                    avatar: require('./assets/image/avatar2.jpg')
+                  },
+                  createAt: '2020.11.25'
+                },
+                {
+                  content: '回复2',
+                  visitor: {
+                    name: 'NARUTO',
+                    avatar: require('./assets/image/avatar2.jpg')
+                  },
+                  createAt: '2020.11.25'
+                }
+              ]
+            },
+            {
+              content: '测试2',
+              visitor: {
+                name: '地上的梦龙',
+                avatar: require('./assets/image/avatar3.jpg')
+              },
+              createAt: '2020.11.21',
+              childrenComments: [
+                {
+                  content: '回复1',
+                  visitor: {
+                    name: 'NARUTO',
+                    avatar: require('./assets/image/avatar2.jpg')
+                  },
+                  createAt: '2019.1.23'
+                }
+              ]
+            }
+          ])
+          .flat(Infinity)
+      }, 0)
     }
   }
 }
 </script>
 
-<style>
+<style lang="scss">
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 html {
   font-size: 14px;
+}
+
+html,body,#app {
+  height: 100%;
 }
 
 @media screen and (min-width: 320px) {
@@ -120,6 +207,54 @@ html {
 @media screen and (min-width: 1200px) {
   html {
     font-size: 18px;
+  }
+}
+
+.change-role {
+  background: #1c2433;
+  color: #eee;
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  .change {
+    cursor: pointer;
+    padding: 0.4rem;
+    margin-right: 2rem;
+    font-size: 0.9rem;
+    border: 1px solid #e99210;
+    border-radius: 5px;
+    user-select: none;
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+  .current-role {
+    min-width: 15rem;
+    color: #e99210;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px dashed #e99210;
+    padding: 0 1rem;
+    img {
+      width: 1.5rem;
+      height: 1.5rem;
+      margin-right: 0.5rem;
+      border: 1px solid #eee;
+      border-radius: 50%;
+    }
+  }
+}
+
+.comment-wrap {
+  overflow: auto;
+}
+
+@media screen and (min-width: 760px) {
+  body {
+    margin: 0 10%;
+    border: 1px dashed #eee;
   }
 }
 </style>

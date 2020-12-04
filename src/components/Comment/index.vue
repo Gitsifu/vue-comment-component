@@ -1,11 +1,7 @@
 <template>
   <div id="comment" ref="comment">
     <!-- 顶部评论表单区域 -->
-    <comment-form
-      class-name="comment-root"
-      :upload-img="uploadImg"
-      @form-submit="formSubmit"
-    >
+    <comment-form :upload-img="uploadImg" @form-submit="formSubmit">
       <img
         class="avatar"
         :src="user.avatar || ''"
@@ -14,10 +10,10 @@
     </comment-form>
 
     <!-- 底部评论列表 -->
-    <comment-list v-if="data" ref="comment-list">
+    <comment-list v-if="cacheData.length > 0" ref="comment-list">
       <!-- 单个评论 -->
       <comment-item
-        v-for="(comment, i) in data"
+        v-for="(comment, i) in cacheData"
         :id="`comment-${i}`"
         :key="`comment-${i}`"
         :author="author"
@@ -41,7 +37,7 @@
 
         <!-- 回复列表 -->
         <template #replyList="{parentId}">
-          <comment-list v-if="comment.children && comment.children.length > 0">
+          <comment-list v-if="comment.children.length > 0">
             <!-- 单条回复 -->
             <comment-item
               v-for="(child, j) in comment.children"
@@ -58,7 +54,6 @@
                 v-if="forms.includes(`${parentId}-${j}`)"
                 :id="`${parentId}-${j}`"
                 :comment="child"
-                class-name="reply sub-reply"
                 :placeholder="`回复${child.user && child.user.name}...`"
                 :upload-img="uploadImg"
                 @form-delete="deleteForm"
@@ -122,6 +117,7 @@ export default {
       type: Function,
       default: null
     },
+    /* 是否是作者（拥有删除权限） */
     author: {
       type: Boolean,
       default: false
@@ -129,10 +125,99 @@ export default {
   },
   data() {
     return {
-      forms: [] // 显示在视图上的表单id数组
+      forms: [], // 显示在视图上的表单id数组
+      cacheData: []
     }
   },
+  created() {
+    // 监听并执行一次
+    const cancel = this.$watch('data', () => {
+      this.processData()
+      cancel && cancel()
+    })
+  },
   methods: {
+    // * 处理初始数据
+    processData() {
+      this.cacheData = this.data.map(this.comparePropsAndValues)
+    },
+    // * 对比和检查评论对象字段值
+    comparePropsAndValues(comment) {
+      // 初始对象
+      const map = {
+        content: '',
+        imgSrc: '',
+        children: [],
+        likes: 0,
+        reply: null,
+        createAt: null,
+        user: {}
+      }
+
+      // 赋值
+      for (const key in map) {
+        map[key] = comment[key] || comment[this.props[key]] || map[key]
+
+        // 校验
+        this.validate({ key, value: map[key] })
+      }
+
+      if (map.children.length > 0) {
+        map.children = map.children.map(this.comparePropsAndValues)
+      }
+
+      return map
+    },
+    // * 校验数据
+    validate({ key, value }) {
+      if (
+        key === 'user' &&
+        (typeof value !== 'object' || JSON.stringify(value) === '{}')
+      ) {
+        throw new Error(`${key} must be an object with props.`)
+      }
+
+      if (key === 'reply' && typeof value !== 'object') {
+        throw new Error(`${key} must be an object.`)
+      }
+
+      if (key === 'children' && !Array.isArray(value)) {
+        throw new Error(`${key} must be an array.`)
+      }
+
+      if (key === 'createAt' && new Date(value).toString() === 'Invalid Date') {
+        throw new Error(`${key} is not a valid date.`)
+      }
+    },
+    // * 将更新后的数组中的对象数据转换为初始对象结构
+    transformToOriginObj(comment) {
+      try {
+        const _comment = JSON.parse(JSON.stringify(comment))
+        const props = this.props
+        if (!(props && Object.keys(props).length > 0)) {
+          return _comment
+        }
+
+        if (_comment._liked !== void 0) {
+          delete _comment._liked
+        }
+
+        if (_comment.children.length > 0) {
+          _comment.children = _comment.children.map(this.transformToOriginObj)
+        }
+
+        for (const key in props) {
+          if (key !== props[key]) {
+            _comment[props[key]] = JSON.parse(JSON.stringify(_comment[key]))
+            delete _comment[key]
+          }
+        }
+
+        return _comment
+      } catch {
+        return comment
+      }
+    },
     // * 点击回复按钮，判断是否已存在该id的表单，存在删除该表单，不存在则新增该表单，并触发其他表单blur事件
     hasForm(id) {
       this.forms.includes(id) ? this.deleteForm(id) : this.addForm(id)
@@ -149,12 +234,13 @@ export default {
     },
     // * 评论或回复
     async formSubmit({ id, callback, ...params }) {
+      const _params = Object.assign(params, { user: this.user })
+
       // 等待外部提交事件执行
       if (typeof this.beforeSubmit === 'function') {
         try {
-          const res = await this.beforeSubmit(
-            JSON.parse(JSON.stringify(params))
-          )
+          const data = this.transformToOriginObj(_params)
+          const res = await this.beforeSubmit(data)
           if (res === false) return
         } catch (e) {
           throw new Error(e)
@@ -162,15 +248,16 @@ export default {
       }
 
       // 插入评论或回复
-      this.addComment(id, Object.assign(params, { user: this.user }))
+      this.addComment(id, params)
       callback()
     },
     // * 点赞
-    async handleCommentLike({ id, comment: { children, liked, ...params }}) {
+    async handleCommentLike({ id, comment: { children, _liked, ...params }}) {
+      const _params = Object.assign(params, { user: this.user })
+
       if (typeof this.beforeLike === 'function') {
         try {
-          const data = JSON.parse(JSON.stringify(params))
-          const res = await this.beforeLike(data)
+          const res = await this.beforeLike(this.transformToOriginObj(_params))
           if (res === false) return
         } catch (e) {
           throw new Error(e)
@@ -183,7 +270,8 @@ export default {
     async handleCommentDelete({ id, comment }) {
       if (typeof this.beforeDelete === 'function') {
         try {
-          const res = await this.beforeDelete(comment)
+          const data = this.transformToOriginObj(comment)
+          const res = await this.beforeDelete(data)
           if (res === false) return
         } catch (e) {
           throw new Error(e)
@@ -197,49 +285,39 @@ export default {
       const indexs = id.split('-')
       const commentIndex = +indexs[1]
       const replyIndex = indexs[2]
-      const data = this.data.map((c, i) => {
+
+      this.cacheData.forEach((c, i) => {
         if (i === +commentIndex) {
           let item = c
 
           if (replyIndex !== undefined) {
-            c.children.map((r, i) => {
-              if (i === +replyIndex) {
-                item = r
-              }
-              return r
-            })
+            item = c.children.find((r, i) => i === +replyIndex)
           }
 
-          item.liked = !item.liked
+          item._liked = !item._liked
           if (item.likes) {
-            item.liked ? item.likes++ : item.likes--
+            item._liked ? item.likes++ : item.likes--
           } else {
             item.likes = 1
           }
         }
-
-        return c
       })
 
+      const data = this.cacheData.map(this.transformToOriginObj)
       this.$emit('input', data)
     },
     // * 存储新评论或回复
     addComment(id, rawData) {
       const commentIndex = id.split('-')[1]
-      let data = []
 
       if (commentIndex === 'root') {
-        data = this.data.concat(rawData)
+        this.cacheData.push(rawData)
       } else {
-        data = this.data.map((c, i) => {
-          if (i === +commentIndex) {
-            if (!Array.isArray(c.children)) c.children = []
-            c.children.push(rawData)
-          }
-          return c
-        })
+        const comment = this.cacheData.find((c, i) => i === +commentIndex)
+        comment.children.push(rawData)
       }
 
+      const data = this.cacheData.map(this.transformToOriginObj)
       this.$emit('input', data)
     },
     // * 删除评论或回复
@@ -247,17 +325,16 @@ export default {
       const commentIndex = id.split('-')[1]
       const replyIndex = id.split('-')[2]
 
-      const data = this.data.filter((c, i) => {
-        if (!replyIndex && replyIndex !== '0') {
+      this.cacheData = this.cacheData.filter((c, i) => {
+        if (replyIndex === void 0) {
           return i !== +commentIndex
         } else {
-          c.children = c.children.filter((r, j) => {
-            return j !== +replyIndex
-          })
+          c.children = c.children.filter((r, j) => j !== +replyIndex)
           return c
         }
       })
 
+      const data = this.cacheData.map(this.transformToOriginObj)
       this.$emit('input', data)
     },
     // * 向下递归触发表单blur事件
@@ -280,7 +357,7 @@ export default {
 
 <style lang="scss" scoped>
 #comment {
-  border-top: 1px solid #ebebeb;
+  // border-top: 1px solid #ebebeb;
   padding-top: 1.0664rem;
   & > .comment-form {
     margin: 0 1.3328rem 1.0664rem;

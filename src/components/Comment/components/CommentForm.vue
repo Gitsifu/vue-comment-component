@@ -15,7 +15,7 @@
             @input="(e) => (value = e.target.value)"
             @focus="handleFocus"
             @blur="handleBlur"
-            @mousedown="handleMousedown"
+            @mousedown="closeEmojiSelector"
           />
         </div>
         <div v-show="imgSrc" ref="image-preview-box" class="image-preview-box">
@@ -24,7 +24,7 @@
             :style="`background-image: url(${imgSrc})`"
             class="image"
           />
-          <div class="clean-btn" @mousedown.prevent="imgSrc = ''">
+          <div class="clean-btn" @mousedown.prevent="removeImg">
             <svg
               aria-hidden="true"
               width="15"
@@ -53,21 +53,17 @@
       <div
         v-show="focus || value || imgSrc"
         class="option-box"
-        @mousedown.prevent="$refs.input.focus()"
+        @mousedown.prevent="closeEmojiSelector($refs.input.focus())"
       >
-        <div class="emoji emoji-btn" @mousedown.prevent="openEmojiSelector">
+        <div
+          class="emoji emoji-btn"
+          @mousedown.prevent.stop="openEmojiSelector"
+        >
           <div class="emoji-box">
-            <div
-              data-src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDIyIDIyIj4KICAgIDxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPHBhdGggZD0iTTEgMWgyMHYyMEgxeiIvPgogICAgICAgIDxwYXRoIGZpbGw9IiMwMjdGRkYiIGZpbGwtcnVsZT0ibm9uemVybyIgZD0iTTExIDE4LjQzOGE3LjQzOCA3LjQzOCAwIDEgMCAwLTE0Ljg3NiA3LjQzOCA3LjQzOCAwIDAgMCAwIDE0Ljg3NnptMCAxLjA2MmE4LjUgOC41IDAgMSAxIDAtMTcgOC41IDguNSAwIDAgMSAwIDE3ek03LjgxMiA5LjkzN2ExLjA2MiAxLjA2MiAwIDEgMCAwLTIuMTI0IDEuMDYyIDEuMDYyIDAgMCAwIDAgMi4xMjV6bTYuMzc1IDBhMS4wNjMgMS4wNjMgMCAxIDAgMC0yLjEyNSAxLjA2MyAxLjA2MyAwIDAgMCAwIDIuMTI1ek0xMSAxNi4yMzJhMy4yNyAzLjI3IDAgMCAwIDMuMjctMy4yN0g3LjczYTMuMjcgMy4yNyAwIDAgMCAzLjI3IDMuMjd6Ii8+CiAgICA8L2c+Cjwvc3ZnPgo="
-              class="lazy icon loaded immediate"
-              style="background-image: url(&quot;data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDIyIDIyIj4KICAgIDxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPHBhdGggZD0iTTEgMWgyMHYyMEgxeiIvPgogICAgICAgIDxwYXRoIGZpbGw9IiMwMjdGRkYiIGZpbGwtcnVsZT0ibm9uemVybyIgZD0iTTExIDE4LjQzOGE3LjQzOCA3LjQzOCAwIDEgMCAwLTE0Ljg3NiA3LjQzOCA3LjQzOCAwIDAgMCAwIDE0Ljg3NnptMCAxLjA2MmE4LjUgOC41IDAgMSAxIDAtMTcgOC41IDguNSAwIDAgMSAwIDE3ek03LjgxMiA5LjkzN2ExLjA2MiAxLjA2MiAwIDEgMCAwLTIuMTI0IDEuMDYyIDEuMDYyIDAgMCAwIDAgMi4xMjV6bTYuMzc1IDBhMS4wNjMgMS4wNjMgMCAxIDAgMC0yLjEyNSAxLjA2MyAxLjA2MyAwIDAgMCAwIDIuMTI1ek0xMSAxNi4yMzJhMy4yNyAzLjI3IDAgMCAwIDMuMjctMy4yN0g3LjczYTMuMjcgMy4yNyAwIDAgMCAzLjI3IDMuMjd6Ii8+CiAgICA8L2c+Cjwvc3ZnPgo=&quot;);"
-            />
+            <div class="icon" />
             <span>表情</span>
           </div>
-          <ImojiSelector
-            v-show="showEmojiSelector"
-            @choose="(v) => (value += v)"
-          />
+          <EmojiSelector v-show="showEmojiSelector" @choose="(v) => (value += v)" />
         </div>
         <div class="image-btn" @mousedown.prevent="$refs.upload.click()">
           <svg
@@ -113,10 +109,10 @@
 </template>
 
 <script>
-import ImojiSelector from './ImojiSelector'
+import EmojiSelector from './EmojiSelector'
 export default {
   name: 'CommentForm',
-  components: { ImojiSelector },
+  components: { EmojiSelector },
   props: {
     placeholder: {
       type: String,
@@ -125,10 +121,6 @@ export default {
     id: {
       type: [String, Number],
       default: 'comment-root'
-    },
-    className: {
-      type: String,
-      default: ''
     },
     comment: {
       type: Object,
@@ -151,6 +143,16 @@ export default {
     // 是否为顶部评论表单
     isRoot() {
       return this.id === 'comment-root'
+    },
+    isSub() {
+      return this.id.split('-').length === 3
+    },
+    className() {
+      return this.isRoot
+        ? 'comment-root'
+        : this.isSub
+          ? 'reply sub-reply'
+          : 'reply'
     }
   },
   mounted() {
@@ -164,7 +166,6 @@ export default {
   },
   methods: {
     handleChange(e) {
-      console.log('upload change')
       const files = e.target.files
       if (!(files && files[0])) return
       this.beforeSetImg(files[0])
@@ -188,7 +189,9 @@ export default {
         this.imgSrc = reader.result
       }
       reader.onerror = () => {
-        throw new Error(reader.error)
+        throw new Error(
+          `read file errored, the error code is ${reader.error.code}.`
+        )
       }
     },
     handleFocus(e) {
@@ -212,11 +215,6 @@ export default {
         this.close()
       }
     },
-    handleMousedown() {
-      if (this.focus) {
-        this.showEmojiSelector = false
-      }
-    },
     handleSubmit() {
       if (!this.value.trim() && !this.imgSrc) return
       const user = (this.comment && this.comment.user) || null
@@ -225,12 +223,16 @@ export default {
         id: this.id,
         content: this.value,
         imgSrc: this.imgSrc,
-        reply:
-          this.id.split('-').length === 3 && JSON.parse(JSON.stringify(user)), // 子回复
+        reply: (this.isSub && JSON.parse(JSON.stringify(user))) || null,
         createAt: new Date().getTime(),
+        likes: 0,
         callback: () => {
           this.isRoot ? this.reset() : this.close()
         }
+      }
+
+      if (!this.isSub) {
+        data.children = []
       }
 
       this.$emit('form-submit', data)
@@ -243,6 +245,10 @@ export default {
         e.preventDefault()
       }
     },
+    removeImg() {
+      this.imgSrc = ''
+      this.closeEmojiSelector()
+    },
     reset() {
       this.value = ''
       this.imgSrc = ''
@@ -254,10 +260,18 @@ export default {
     openEmojiSelector() {
       this.showEmojiSelector = !this.showEmojiSelector
 
+      if (document.activeElement === document.body) {
+        this.$refs.input.focus()
+      }
       if (this.showEmojiSelector) {
         // 移动光标到末尾
         const input = this.$refs.input
         input.selectionStart = input.selectionEnd = this.value.length
+      }
+    },
+    closeEmojiSelector() {
+      if (this.showEmojiSelector) {
+        this.showEmojiSelector = false
       }
     }
   }
@@ -348,13 +362,13 @@ export default {
         .emoji-box {
           display: flex;
           align-items: center;
-          position: relative;
           cursor: pointer;
           .icon {
             width: 1.2rem;
             height: 1.2rem;
             background-repeat: no-repeat;
             background-size: cover;
+            background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDIyIDIyIj4KICAgIDxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPHBhdGggZD0iTTEgMWgyMHYyMEgxeiIvPgogICAgICAgIDxwYXRoIGZpbGw9IiMwMjdGRkYiIGZpbGwtcnVsZT0ibm9uemVybyIgZD0iTTExIDE4LjQzOGE3LjQzOCA3LjQzOCAwIDEgMCAwLTE0Ljg3NiA3LjQzOCA3LjQzOCAwIDAgMCAwIDE0Ljg3NnptMCAxLjA2MmE4LjUgOC41IDAgMSAxIDAtMTcgOC41IDguNSAwIDAgMSAwIDE3ek03LjgxMiA5LjkzN2ExLjA2MiAxLjA2MiAwIDEgMCAwLTIuMTI0IDEuMDYyIDEuMDYyIDAgMCAwIDAgMi4xMjV6bTYuMzc1IDBhMS4wNjMgMS4wNjMgMCAxIDAgMC0yLjEyNSAxLjA2MyAxLjA2MyAwIDAgMCAwIDIuMTI1ek0xMSAxNi4yMzJhMy4yNyAzLjI3IDAgMCAwIDMuMjctMy4yN0g3LjczYTMuMjcgMy4yNyAwIDAgMCAzLjI3IDMuMjd6Ii8+CiAgICA8L2c+Cjwvc3ZnPgo=");
           }
           &:hover {
             opacity: 0.8;

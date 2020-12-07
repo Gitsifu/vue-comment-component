@@ -16,6 +16,7 @@
         v-for="(comment, i) in cacheData"
         :id="`comment-${i}`"
         :key="`comment-${i}`"
+        :ref="`comment-${i}`"
         :author="author"
         :comment="comment"
         @comment-reply="hasForm"
@@ -27,7 +28,7 @@
           <comment-form
             v-if="forms.includes(id)"
             :id="id"
-            class-name="reply"
+            :ref="`${id}-form`"
             :placeholder="`回复${comment.user.name}...`"
             :upload-img="uploadImg"
             @form-submit="formSubmit"
@@ -36,13 +37,14 @@
         </template>
 
         <!-- 回复列表 -->
-        <template #replyList="{parentId}">
-          <comment-list v-if="comment.children.length > 0">
-            <!-- 单条回复 -->
+        <template v-if="comment.children.length > 0" #subList="{parentId}">
+          <comment-list sub>
+            <!-- 回复 -->
             <comment-item
               v-for="(child, j) in comment.children"
               :id="`${parentId}-${j}`"
               :key="`${parentId}-${j}`"
+              :ref="`${parentId}-${j}`"
               :comment="child"
               :author="author"
               @comment-reply="hasForm"
@@ -53,6 +55,7 @@
               <comment-form
                 v-if="forms.includes(`${parentId}-${j}`)"
                 :id="`${parentId}-${j}`"
+                :ref="`${parentId}-${j}-form`"
                 :comment="child"
                 :placeholder="`回复${child.user && child.user.name}...`"
                 :upload-img="uploadImg"
@@ -69,7 +72,7 @@
 
 <script>
 import CommentForm from './components/CommentForm'
-import CommentList from './components/CommentIist'
+import CommentList from './components/CommentList'
 import CommentItem from './components/CommentItem'
 export default {
   name: 'Comment',
@@ -127,6 +130,16 @@ export default {
     return {
       forms: [], // 显示在视图上的表单id数组
       cacheData: []
+    }
+  },
+  // render(h) {
+
+  // },
+  computed: {
+    computedProps() {
+      if (!this.props) return null
+      const entries = Object.entries(this.props)
+      return entries.length > 0 ? entries : null
     }
   },
   created() {
@@ -192,23 +205,26 @@ export default {
     // * 将更新后的数组中的对象数据转换为初始对象结构
     transformToOriginObj(comment) {
       try {
-        const _comment = JSON.parse(JSON.stringify(comment))
-        const props = this.props
-        if (!(props && Object.keys(props).length > 0)) {
-          return _comment
-        }
+        const _comment = JSON.parse(
+          JSON.stringify(comment, (key, value) => {
+            if (key === '_liked') {
+              return undefined // 过滤掉_liked字段
+            }
 
-        if (_comment._liked !== void 0) {
-          delete _comment._liked
-        }
+            return value
+          })
+        )
 
         if (_comment.children.length > 0) {
           _comment.children = _comment.children.map(this.transformToOriginObj)
         }
 
-        for (const key in props) {
-          if (key !== props[key]) {
-            _comment[props[key]] = JSON.parse(JSON.stringify(_comment[key]))
+        // 返回props中自定义的字段名
+        if (!this.computedProps) return _comment
+
+        for (const [key, value] of this.computedProps) {
+          if (key !== value && Object.hasOwnProperty.call(_comment, key)) {
+            _comment[value] = JSON.parse(JSON.stringify(_comment[key]))
             delete _comment[key]
           }
         }
@@ -226,6 +242,7 @@ export default {
     // * 增加新表单
     addForm(id) {
       this.forms.push(id)
+      this.scrollIntoView(`${id}-form`)
     },
     // * 删除表单
     deleteForm(id) {
@@ -282,54 +299,58 @@ export default {
     },
     // * 存储点赞
     storeLikes(id) {
-      const indexs = id.split('-')
-      const commentIndex = +indexs[1]
-      const replyIndex = indexs[2]
+      const { commentIndex, replyIndex } = this.getIndex(id)
 
-      this.cacheData.forEach((c, i) => {
-        if (i === +commentIndex) {
-          let item = c
+      let comment = this.cacheData[commentIndex]
 
-          if (replyIndex !== undefined) {
-            item = c.children.find((r, i) => i === +replyIndex)
-          }
+      if (!isNaN(replyIndex)) {
+        comment = comment.children[replyIndex]
+      }
 
-          item._liked = !item._liked
-          if (item.likes) {
-            item._liked ? item.likes++ : item.likes--
-          } else {
-            item.likes = 1
-          }
-        }
-      })
+      comment._liked = !comment._liked
+
+      if (comment.likes) {
+        comment._liked ? comment.likes++ : comment.likes--
+      } else {
+        comment.likes = 1
+      }
 
       const data = this.cacheData.map(this.transformToOriginObj)
       this.$emit('input', data)
     },
     // * 存储新评论或回复
     addComment(id, rawData) {
-      const commentIndex = id.split('-')[1]
+      const { commentIndex } = this.getIndex(id)
 
+      // 更新视图
       if (commentIndex === 'root') {
         this.cacheData.push(rawData)
       } else {
-        const comment = this.cacheData.find((c, i) => i === +commentIndex)
+        const comment = this.cacheData[commentIndex]
         comment.children.push(rawData)
       }
 
+      // 滚动至可见视图上
+      const signal =
+        commentIndex === 'root'
+          ? this.cacheData.length - 1
+          : `${commentIndex}-${this.cacheData[commentIndex].children.length -
+              1}`
+      this.scrollIntoView(`comment-${signal}`)
+
+      // 更新外部数据
       const data = this.cacheData.map(this.transformToOriginObj)
       this.$emit('input', data)
     },
     // * 删除评论或回复
     deleteComment(id) {
-      const commentIndex = id.split('-')[1]
-      const replyIndex = id.split('-')[2]
+      const { commentIndex, replyIndex } = this.getIndex(id)
 
       this.cacheData = this.cacheData.filter((c, i) => {
         if (replyIndex === void 0) {
-          return i !== +commentIndex
+          return i !== commentIndex
         } else {
-          c.children = c.children.filter((r, j) => j !== +replyIndex)
+          c.children = c.children.filter((r, j) => j !== replyIndex)
           return c
         }
       })
@@ -350,6 +371,17 @@ export default {
         const richInput = target.$refs['rich-input']
         richInput && richInput.blur()
       }
+    },
+    // * 从id中提取出序号
+    getIndex(id) {
+      const [, c, r] = id.split('-')
+      return { commentIndex: c === 'root' ? c : +c, replyIndex: +r }
+    },
+    // * 使得更新的子组件滚动到视图上
+    scrollIntoView(ref) {
+      this.$nextTick(() => {
+        this.$refs[ref][0].$el.scrollIntoView(false)
+      })
     }
   }
 }

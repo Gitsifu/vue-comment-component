@@ -102,9 +102,7 @@
         <slot :id="id" />
 
         <!-- 回复列表 -->
-        <div v-if="!isSubComment" class="sub-comment-list">
-          <slot name="replyList" :parentId="id" />
-        </div>
+        <slot name="subList" :parentId="id" />
       </div>
     </div>
   </div>
@@ -206,6 +204,7 @@ export default {
           margin-top: 0.5rem;
           img {
             max-width: 100%;
+            max-height: 20rem;
             object-fit: cover;
           }
         }

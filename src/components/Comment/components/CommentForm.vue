@@ -13,7 +13,7 @@
             :value="value"
             :placeholder="placeholder"
             @input="(e) => (value = e.target.value)"
-            @focus="handleFocus"
+            @focus="focus = true"
             @blur="handleBlur"
             @mousedown="closeEmojiSelector"
           />
@@ -63,9 +63,12 @@
             <div class="icon" />
             <span>表情</span>
           </div>
-          <EmojiSelector v-show="showEmojiSelector" @choose="(v) => (value += v)" />
+          <EmojiSelector
+            v-show="showEmojiSelector"
+            @choose="(v) => (value += v)"
+          />
         </div>
-        <div class="image-btn" @mousedown.prevent="$refs.upload.click()">
+        <div class="image-btn" @mousedown.prevent="triggerUpload">
           <svg
             aria-hidden="true"
             width="22"
@@ -144,6 +147,7 @@ export default {
     isRoot() {
       return this.id === 'comment-root'
     },
+    // 是否为回复中的表单
     isSub() {
       return this.id.split('-').length === 3
     },
@@ -165,11 +169,13 @@ export default {
     )
   },
   methods: {
+    // * 选择要上传的图片
     handleChange(e) {
       const files = e.target.files
       if (!(files && files[0])) return
       this.beforeSetImg(files[0])
     },
+    // * 处理图片
     async beforeSetImg(file) {
       if (!/^image/.test(file.type)) {
         throw new Error("file type must contain 'image'.")
@@ -194,9 +200,16 @@ export default {
         )
       }
     },
-    handleFocus(e) {
-      this.focus = true
+    // * 点击图片触发上传
+    triggerUpload() {
+      this.$refs.upload.click()
     },
+    // * 点击图片上的删除按钮
+    removeImg() {
+      this.imgSrc = ''
+      this.closeEmojiSelector()
+    },
+    // * textarea blur 事件
     handleBlur(e) {
       this.showEmojiSelector = false
 
@@ -215,6 +228,16 @@ export default {
         this.close()
       }
     },
+    // * textarea paste 事件
+    handlePaste(e) {
+      const file = e.clipboardData.files[0]
+      if (file) {
+        // 只处理复制图片
+        this.beforeSetImg(file)
+        e.preventDefault()
+      }
+    },
+    // * 点击评论
     handleSubmit() {
       if (!this.value.trim() && !this.imgSrc) return
       const user = (this.comment && this.comment.user) || null
@@ -237,26 +260,17 @@ export default {
 
       this.$emit('form-submit', data)
     },
-    handlePaste(e) {
-      const file = e.clipboardData.files[0]
-      if (file) {
-        // 只处理复制图片
-        this.beforeSetImg(file)
-        e.preventDefault()
-      }
-    },
-    removeImg() {
-      this.imgSrc = ''
-      this.closeEmojiSelector()
-    },
+    // * 重置组件状态
     reset() {
       this.value = ''
       this.imgSrc = ''
       this.$refs.input.blur()
     },
+    // * 销毁组件
     close() {
       this.$emit('form-delete', this.id)
     },
+    // * 选择表情
     openEmojiSelector() {
       this.showEmojiSelector = !this.showEmojiSelector
 
@@ -269,6 +283,7 @@ export default {
         input.selectionStart = input.selectionEnd = this.value.length
       }
     },
+    // * 关闭选择表情组件
     closeEmojiSelector() {
       if (this.showEmojiSelector) {
         this.showEmojiSelector = false
@@ -368,7 +383,7 @@ export default {
             height: 1.2rem;
             background-repeat: no-repeat;
             background-size: cover;
-            background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDIyIDIyIj4KICAgIDxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPHBhdGggZD0iTTEgMWgyMHYyMEgxeiIvPgogICAgICAgIDxwYXRoIGZpbGw9IiMwMjdGRkYiIGZpbGwtcnVsZT0ibm9uemVybyIgZD0iTTExIDE4LjQzOGE3LjQzOCA3LjQzOCAwIDEgMCAwLTE0Ljg3NiA3LjQzOCA3LjQzOCAwIDAgMCAwIDE0Ljg3NnptMCAxLjA2MmE4LjUgOC41IDAgMSAxIDAtMTcgOC41IDguNSAwIDAgMSAwIDE3ek03LjgxMiA5LjkzN2ExLjA2MiAxLjA2MiAwIDEgMCAwLTIuMTI0IDEuMDYyIDEuMDYyIDAgMCAwIDAgMi4xMjV6bTYuMzc1IDBhMS4wNjMgMS4wNjMgMCAxIDAgMC0yLjEyNSAxLjA2MyAxLjA2MyAwIDAgMCAwIDIuMTI1ek0xMSAxNi4yMzJhMy4yNyAzLjI3IDAgMCAwIDMuMjctMy4yN0g3LjczYTMuMjcgMy4yNyAwIDAgMCAzLjI3IDMuMjd6Ii8+CiAgICA8L2c+Cjwvc3ZnPgo=");
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDIyIDIyIj4KICAgIDxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPHBhdGggZD0iTTEgMWgyMHYyMEgxeiIvPgogICAgICAgIDxwYXRoIGZpbGw9IiMwMjdGRkYiIGZpbGwtcnVsZT0ibm9uemVybyIgZD0iTTExIDE4LjQzOGE3LjQzOCA3LjQzOCAwIDEgMCAwLTE0Ljg3NiA3LjQzOCA3LjQzOCAwIDAgMCAwIDE0Ljg3NnptMCAxLjA2MmE4LjUgOC41IDAgMSAxIDAtMTcgOC41IDguNSAwIDAgMSAwIDE3ek03LjgxMiA5LjkzN2ExLjA2MiAxLjA2MiAwIDEgMCAwLTIuMTI0IDEuMDYyIDEuMDYyIDAgMCAwIDAgMi4xMjV6bTYuMzc1IDBhMS4wNjMgMS4wNjMgMCAxIDAgMC0yLjEyNSAxLjA2MyAxLjA2MyAwIDAgMCAwIDIuMTI1ek0xMSAxNi4yMzJhMy4yNyAzLjI3IDAgMCAwIDMuMjctMy4yN0g3LjczYTMuMjcgMy4yNyAwIDAgMCAzLjI3IDMuMjd6Ii8+CiAgICA8L2c+Cjwvc3ZnPgo=');
           }
           &:hover {
             opacity: 0.8;

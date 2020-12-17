@@ -12,13 +12,13 @@
         <div class="meta-box">
           <slot name="userMeta">
             <div class="user-popover-box">
-              <span v-if="comment.user">{{ comment.user.name }}</span>
+              <span v-if="comment.user">{{ comment.user.name + (comment.user.author === true ? '（作者）' : '') }}</span>
             </div>
           </slot>
         </div>
 
         <!-- 评论或回复内容 -->
-        <div ref="content" class="content">
+        <div class="content">
           <span
             v-if="comment.reply"
             class="reply"
@@ -43,11 +43,11 @@
             :datetime="comment.createAt"
           >{{ formatTime(comment.createAt) }}</time>
           <div
-            v-if="author"
+            v-if="user.author === true"
             class="delete"
             @click.stop="$emit('comment-delete', { id, comment })"
           >
-            <span style="margin: 0 .2rem;">·</span>删除
+            <span>·</span>删除
           </div>
           <div class="action-box">
             <div
@@ -119,12 +119,11 @@ export default {
     },
     id: {
       type: [String, Number],
-      default: '',
       required: true
     },
-    author: {
-      type: Boolean,
-      default: false
+    user: {
+      type: Object,
+      default: () => {}
     }
   },
   computed: {
@@ -229,6 +228,9 @@ export default {
       .delete {
         visibility: hidden;
         cursor: pointer;
+        span {
+          margin: 0 0.2rem;
+        }
       }
       .action-box {
         flex: 0 0 auto;

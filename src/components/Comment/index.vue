@@ -1,6 +1,6 @@
 <template>
   <div id="comment" ref="comment">
-    <!-- 顶部评论表单区域 -->
+    <!-- 顶部评论表单 -->
     <comment-form :upload-img="uploadImg" @form-submit="formSubmit">
       <img
         class="avatar"
@@ -11,24 +11,23 @@
 
     <!-- 底部评论列表 -->
     <comment-list v-if="cacheData.length > 0" ref="comment-list">
-      <!-- 单个评论 -->
+      <!-- 单条评论 -->
       <comment-item
         v-for="(comment, i) in cacheData"
         :id="`comment-${i}`"
         :key="`comment-${i}`"
         :ref="`comment-${i}`"
-        :author="author"
+        :user="user"
         :comment="comment"
         @comment-reply="hasForm"
         @comment-like="handleCommentLike"
         @comment-delete="handleCommentDelete"
       >
-        <!-- 评论表单 -->
+        <!-- 回复表单 -->
         <template #default="{id}">
           <comment-form
             v-if="forms.includes(id)"
             :id="id"
-            :ref="`${id}-form`"
             :placeholder="`回复${comment.user.name}...`"
             :upload-img="uploadImg"
             @form-submit="formSubmit"
@@ -36,26 +35,25 @@
           />
         </template>
 
-        <!-- 回复列表 -->
+        <!-- 单条评论下的回复列表 -->
         <template v-if="comment.children.length > 0" #subList="{parentId}">
           <comment-list sub>
-            <!-- 回复 -->
+            <!-- 单条回复 -->
             <comment-item
               v-for="(child, j) in comment.children"
               :id="`${parentId}-${j}`"
               :key="`${parentId}-${j}`"
               :ref="`${parentId}-${j}`"
               :comment="child"
-              :author="author"
+              :user="user"
               @comment-reply="hasForm"
               @comment-like="handleCommentLike"
               @comment-delete="handleCommentDelete"
             >
-              <!-- 回复表单 -->
+              <!-- 单条回复的回复表单 -->
               <comment-form
                 v-if="forms.includes(`${parentId}-${j}`)"
                 :id="`${parentId}-${j}`"
-                :ref="`${parentId}-${j}-form`"
                 :comment="child"
                 :placeholder="`回复${child.user && child.user.name}...`"
                 :upload-img="uploadImg"
@@ -119,11 +117,6 @@ export default {
     uploadImg: {
       type: Function,
       default: null
-    },
-    /* 是否是作者（拥有删除权限） */
-    author: {
-      type: Boolean,
-      default: false
     }
   },
   data() {
@@ -132,9 +125,6 @@ export default {
       cacheData: []
     }
   },
-  // render(h) {
-
-  // },
   computed: {
     computedProps() {
       if (!this.props) return null
@@ -154,7 +144,7 @@ export default {
     processData() {
       this.cacheData = this.data.map(this.comparePropsAndValues)
     },
-    // * 对比和检查评论对象字段值
+    // * 对比和检查每条评论对象字段值
     comparePropsAndValues(comment) {
       // 初始对象
       const map = {
@@ -169,7 +159,7 @@ export default {
 
       // 赋值
       for (const key in map) {
-        map[key] = comment[key] || comment[this.props[key]] || map[key]
+        map[key] = comment[this.props[key]] || comment[key] || map[key]
 
         // 校验
         this.validate({ key, value: map[key] })
@@ -183,23 +173,42 @@ export default {
     },
     // * 校验数据
     validate({ key, value }) {
-      if (
-        key === 'user' &&
-        (typeof value !== 'object' || JSON.stringify(value) === '{}')
-      ) {
-        throw new Error(`${key} must be an object with props.`)
+      const map = {
+        user: {
+          validate: function(v) {
+            return (
+              (typeof v !== 'object' || JSON.stringify(v) === '{}') &&
+              this.message
+            )
+          },
+          message: 'User must be an object with props.'
+        },
+        reply: {
+          validate: function(v) {
+            return typeof v !== 'object' && this.message
+          },
+          message: 'Reply must be an object'
+        },
+        children: {
+          validate: function(v) {
+            return !Array.isArray(v) && this.message
+          },
+          message: 'Children must be an array'
+        },
+        createAt: {
+          validate: function(v) {
+            return new Date(value).toString() === 'Invalid Date' && this.message
+          },
+          message: 'CreateAt is not a valid date.'
+        }
       }
 
-      if (key === 'reply' && typeof value !== 'object') {
-        throw new Error(`${key} must be an object.`)
-      }
+      const target = map[key]
+      if (!target) return
 
-      if (key === 'children' && !Array.isArray(value)) {
-        throw new Error(`${key} must be an array.`)
-      }
-
-      if (key === 'createAt' && new Date(value).toString() === 'Invalid Date') {
-        throw new Error(`${key} is not a valid date.`)
+      const res = target.validate(value)
+      if (res) {
+        throw new Error(`validate(): ${res}`)
       }
     },
     // * 将更新后的数组中的对象数据转换为初始对象结构
@@ -242,7 +251,7 @@ export default {
     // * 增加新表单
     addForm(id) {
       this.forms.push(id)
-      this.scrollIntoView(`${id}-form`)
+      // this.scrollIntoView(`${id}-form`)
     },
     // * 删除表单
     deleteForm(id) {
@@ -297,7 +306,7 @@ export default {
 
       this.deleteComment(id)
     },
-    // * 存储点赞
+    // * 保存点赞
     storeLikes(id) {
       const { commentIndex, replyIndex } = this.getIndex(id)
 
@@ -347,7 +356,7 @@ export default {
       const { commentIndex, replyIndex } = this.getIndex(id)
 
       this.cacheData = this.cacheData.filter((c, i) => {
-        if (replyIndex === void 0) {
+        if (isNaN(replyIndex)) {
           return i !== commentIndex
         } else {
           c.children = c.children.filter((r, j) => j !== replyIndex)
@@ -377,7 +386,7 @@ export default {
       const [, c, r] = id.split('-')
       return { commentIndex: c === 'root' ? c : +c, replyIndex: +r }
     },
-    // * 使得更新的子组件滚动到视图上
+    // * 使得更新的子组件滚动到视图可见区域
     scrollIntoView(ref) {
       this.$nextTick(() => {
         this.$refs[ref][0].$el.scrollIntoView(false)

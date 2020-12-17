@@ -5,7 +5,7 @@
       <div class="current-role">
         <img :src="currentUser.avatar">
         <span>{{
-          currentUser.name + (isAuthor ? '（作者）' : '（游客）')
+          currentUser.name + (currentUser.author ? '（作者）' : '（游客）')
         }}</span>
       </div>
     </div>
@@ -17,7 +17,6 @@
         :before-like="like"
         :before-delete="deleteComment"
         :upload-img="uploadImg"
-        :author="isAuthor"
         :props="props"
       />
     </div>
@@ -35,11 +34,12 @@ export default {
     const users = [
       {
         name: 'Up&Up',
-        avatar: require('./assets/image/comment.png')
+        avatar: require('./assets/image/avatar1.jpg'),
+        author: true
       },
       {
         name: '我叫白云',
-        avatar: require('./assets/image/avatar1.jpg')
+        avatar: require('./assets/image/comment.png')
       },
       {
         name: '我叫黑土',
@@ -64,11 +64,6 @@ export default {
       currentUser: users[0],
       users,
       wrapStyle: ''
-    }
-  },
-  computed: {
-    isAuthor() {
-      return /up/i.test(this.currentUser.name)
     }
   },
   created() {
@@ -135,7 +130,7 @@ export default {
               content: '梦芸\n近况如何\n算来已有十月未见你\n甚是思念',
               visitor: {
                 name: '我叫白云',
-                avatar: require('./assets/image/avatar1.jpg')
+                avatar: require('./assets/image/comment.png')
               },
               createAt: '2020.11.24',
               likes: 1,

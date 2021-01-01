@@ -24,7 +24,9 @@
 </template>
 
 <script>
-import Comment from '@/components/Comment'
+// import Comment from '@/components/Comment'
+import Comment from '@/components/Comment/index'
+
 export default {
   name: 'App',
   components: {
@@ -144,7 +146,7 @@ export default {
                   createAt: '2020.11.25'
                 },
                 {
-                  content: '\n我爱你\n如磐石般坚毅',
+                  content: '\n如磐石般坚毅',
                   visitor: {
                     name: '我叫黑土',
                     avatar: require('./assets/image/avatar3.jpg')

@@ -17,15 +17,15 @@
 
 ## 属性
 
-| 参数 | 说明 | 类型 | 默认值 |
-| :---- | :----| :---- | :----- | :------ |
-| data / v-model | 绑定数据| Array | —— |
-| user | 当前用户| Object | —— |
-| props | 单条评论模型| Object | —— |
-| before-submit | 提交评论的回调函数| Function(comment) | —— |
-| before-like | 点赞的回调函数 | Function(comment) | —— |
-| before-delete | 点击删除评论的回调函数 | Function(comment) | —— |
-| upload-img | 上传（复制）图片的回调函数 | Function({ file, callback }) | —— |  
+| 参数            | 说明                    | 类型                         | 默认值  |
+| -------------- | ----------------------- | ---------------------------- | -----  |
+| data / v-model | 绑定数据| Array          | ——                           | ——     |
+| user           | 当前用户| Object         | ——                           | ——     |
+| props          | 单条评论模型| Object     | ——                           | ——      |
+| before-submit  | 提交评论的回调函数        | Function(comment)            | ——     |
+| before-like    | 点赞的回调函数            | Function(comment)            | ——     |
+| before-delete  | 点击删除评论的回调函数     | Function(comment)            | ——     |
+| upload-img     | 上传（复制）图片的回调函数 | Function({ file, callback }) | ——     |  
 
 ## 注意事项
 

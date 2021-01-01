@@ -41,9 +41,9 @@
   likes: 0, // 点赞数，非必需
   reply: null, // 子评论（回复）人信息，非必需
   createAt: null, // 评论时间，必需
-  user: {
+  user: { // 评论人信息，必需
     author: false // 是否为作者，类型为 Boolean，非必需
-  } // 评论人信息，必需
+  } 
 }
 ```
 

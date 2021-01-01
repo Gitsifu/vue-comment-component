@@ -61,6 +61,20 @@ props: {
 }
 ```
 
+## 使用
+
+``` vue
+<Comment
+  v-model="data"
+  :user="currentUser"
+  :before-submit="submit"
+  :before-like="like"
+  :before-delete="deleteComment"
+  :upload-img="uploadImg"
+  :props="props"
+/>
+```
+
 ## 本地开发
 
 ``` shell

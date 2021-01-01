@@ -73,7 +73,7 @@ import CommentForm from './components/CommentForm'
 import CommentList from './components/CommentList'
 import CommentItem from './components/CommentItem'
 export default {
-  name: 'Comment',
+  name: 'JueJinComment',
   components: { CommentList, CommentItem, CommentForm },
   inheritAttrs: false,
   model: {

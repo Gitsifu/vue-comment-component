@@ -1,10 +1,10 @@
 # Vue-juejin-comment
 
-一个[掘金](https://juejin.cn/)风格的评论组件。  
+一个[掘金](https://juejin.cn/)风格的评论组件✍。  
 
 之前在写[个人博客网站](https://www.striveforus.com/)时，需要有评论功能，由于个人比较喜欢掘金风格的评论系统，于是仿写出了这个评论组件。希望可以对你有帮助，如果喜欢的话请点个⭐，感谢😃！
 
-**Demo地址**：<https://fengfengfeng-up.github.io/components/vue-juejin-comment>
+**Demo地址**：<https://fengfengfeng-up.github.io/library/vue-juejin-comment>
 
 ## 安装
 
@@ -39,13 +39,13 @@ yarn add @fengfengfeng/vue-juejin-comment
 ``` vue
 <template>
   <Comment
-    v-model="comments"
+    v-model="data"
+    :props="props"
     :user="currentUser"
     :before-submit="addComment"
     :before-delete="deleteComment"
     :before-like="likeComment"
     :upload-img="uploadOrCopyImg"
-    :props="props"
   />
 </template>
 
@@ -56,7 +56,8 @@ import '@fengfengfeng/vue-juejin-comment/dist/vue-juejin-comment.css'
 export default {
   data() {
     return {
-      comments: [],
+      data: [],
+      props: {},
       currentUser: {
         name: '',
         avatar: '',

@@ -10,7 +10,7 @@
     </comment-form>
 
     <!-- 底部评论列表 -->
-    <comment-list v-if="cacheData.length > 0" ref="comment-list">
+    <comment-list ref="comment-list">
       <!-- 单条评论 -->
       <comment-item
         v-for="(comment, i) in cacheData"

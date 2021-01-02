@@ -266,6 +266,7 @@ export default {
     }
   }
 }
+
 .sub-comment-list {
   margin: 0.8rem 0;
   padding: 0 0 0 0.8rem;

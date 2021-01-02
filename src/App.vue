@@ -24,9 +24,9 @@
 </template>
 
 <script>
-// import Comment from '@/components/Comment'
-import Comment from '@fengfengfeng/vue-juejin-comment'
-import '@fengfengfeng/vue-juejin-comment/dist/vue-juejin-comment.css'
+import Comment from '@/components/Comment'
+// import Comment from '@fengfengfeng/vue-juejin-comment'
+// import '@fengfengfeng/vue-juejin-comment/dist/vue-juejin-comment.css'
 
 export default {
   name: 'App',
@@ -277,6 +277,13 @@ html,body,#app {
   body {
     margin: 0 10%;
     border: 1px dashed #eee;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .change-role .current-role {
+    min-width: 5rem;
+    padding: 0 0.5rem;
   }
 }
 </style>

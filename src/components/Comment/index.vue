@@ -36,7 +36,7 @@
         </template>
 
         <!-- 单条评论下的回复列表 -->
-        <template v-if="comment.children.length > 0" #subList="{parentId}">
+        <template #subList="{parentId}">
           <comment-list sub>
             <!-- 单条回复 -->
             <comment-item

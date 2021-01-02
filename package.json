@@ -2,17 +2,6 @@
   "name": "@fenghan/vue-juejin-comment",
   "version": "0.1.0",
   "private": true,
-  "description": "A comment component built by vue which is like juejin style",
-  "main": "index.js",
-  "keywords": [
-    "vue",
-    "component"
-  ],
-  "homepage": "https://fengfengfeng-up.github.io/components/vue-juejin-comment",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Fengfengfeng-up/vue-comment-component.git"
-  },
   "license": "MIT",
   "author": "Feng Han",
   "scripts": {
@@ -21,6 +10,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@fengfengfeng/vue-juejin-comment": "^0.1.0",
     "core-js": "^3.6.5",
     "node-sass": "^5.0.0",
     "sass": "^1.29.0",

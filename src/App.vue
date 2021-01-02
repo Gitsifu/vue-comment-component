@@ -25,7 +25,8 @@
 
 <script>
 // import Comment from '@/components/Comment'
-import Comment from '@/components/Comment/index'
+import Comment from '@fengfengfeng/vue-juejin-comment'
+import '@fengfengfeng/vue-juejin-comment/dist/vue-juejin-comment.css'
 
 export default {
   name: 'App',

@@ -1,6 +1,6 @@
 {
   "name": "@fengfengfeng/vue-juejin-comment",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": false,
   "description": "A comment component built by vue which is like juejin style",
   "main": "dist/vue-juejin-comment.umd.min",

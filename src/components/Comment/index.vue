@@ -10,7 +10,7 @@
     </comment-form>
 
     <!-- 底部评论列表 -->
-    <comment-list ref="comment-list">
+    <comment-list v-if="data && data.length > 0" ref="comment-list">
       <!-- 单条评论 -->
       <comment-item
         v-for="(comment, i) in cacheData"
@@ -36,7 +36,7 @@
         </template>
 
         <!-- 单条评论下的回复列表 -->
-        <template v-if="comment.children.length > 0" #subList="{parentId}">
+        <template #subList="{parentId}">
           <comment-list sub>
             <!-- 单条回复 -->
             <comment-item

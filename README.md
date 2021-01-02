@@ -115,16 +115,3 @@ props: {
   user: 'visitor'
 }
 ```
-
-## 本地开发
-
-``` shell
-# install dependencies
-npm install
-
-# serve with hot reload at localhost
-npm run serve
-
-# build for production with minification
-npm run build
-```

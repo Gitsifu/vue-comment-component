@@ -1,0 +1,13 @@
+# 忽略目录
+examples/
+src/
+public/
+node_modules/
+
+# 忽略指定文件
+.gitignore
+LICENSE
+vue.config.js
+babel.config.js
+.eslintrc.js
+*.map

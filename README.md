@@ -1,14 +1,19 @@
-# 仿掘金评论组件
+# Vue-juejin-comment
 
 一个[掘金](https://juejin.cn/)风格的评论组件。  
 
-之前在写[个人博客网站](https://www.striveforus.com/)时，需要有评论功能，由于个人比较喜欢掘金风格的评论系统，于是仿写出了这个评论组件。希望可以对你有帮助，如果喜欢的话请点个⭐，感谢😃！  
+之前在写[个人博客网站](https://www.striveforus.com/)时，需要有评论功能，由于个人比较喜欢掘金风格的评论系统，于是仿写出了这个评论组件。希望可以对你有帮助，如果喜欢的话请点个⭐，感谢😃！
 
-如有问题，请提 Issues，或直接与我联系，微信 IOHX12358。
+**Demo地址**：<https://fengfengfeng-up.github.io/components/vue-juejin-comment>
 
-## Demo 地址
+## 安装
 
-<https://fengfengfeng-up.github.io/components/vue-juejin-comment>
+``` shell
+npm i @fengfengfeng/vue-juejin-comment
+
+# or yarn
+yarn add @fengfengfeng/vue-juejin-comment
+```
 
 ## 功能
 
@@ -28,6 +33,56 @@
 | before-like    | 点赞的回调函数            | Function(comment)            | ——     |
 | before-delete  | 点击删除评论的回调函数     | Function(comment)            | ——     |
 | upload-img     | 上传（复制）图片的回调函数 | Function({ file, callback }) | ——     |  
+
+## 使用
+
+``` vue
+<template>
+  <Comment
+    v-model="comments"
+    :user="currentUser"
+    :before-submit="addComment"
+    :before-delete="deleteComment"
+    :before-like="likeComment"
+    :upload-img="uploadOrCopyImg"
+    :props="props"
+  />
+</template>
+
+<script>
+import Comment from '@fengfengfeng/vue-juejin-comment'
+import '@fengfengfeng/vue-juejin-comment/dist/vue-juejin-comment.css'
+
+export default {
+  data() {
+    return {
+      comments: [],
+      currentUser: {
+        name: '',
+        avatar: '',
+        author: false
+      }
+    }
+  },
+  methods: {
+    addComment(comment) {
+      // ...
+    },
+    deleteComment(comment) {
+      // ...
+    },
+    likeComment(comment) {
+      // ...
+    },
+    uploadOrCopyImg({ file, callback }) {
+      // ...
+      
+      callback(imgUrl) // 图片地址必传
+    }
+  }
+}
+</script>
+```
 
 ## 注意事项
 
@@ -59,20 +114,6 @@ props: {
   createAt: 'time',
   user: 'visitor'
 }
-```
-
-## 使用
-
-``` vue
-<Comment
-  v-model="data"
-  :user="currentUser"
-  :before-submit="submit"
-  :before-like="like"
-  :before-delete="deleteComment"
-  :upload-img="uploadImg"
-  :props="props"
-/>
 ```
 
 ## 本地开发

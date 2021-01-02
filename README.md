@@ -4,7 +4,7 @@
 
 之前在写[个人博客网站](https://www.striveforus.com/)时，需要有评论功能，由于个人比较喜欢掘金风格的评论系统，于是仿写出了这个评论组件。希望可以对你有帮助，如果喜欢的话请点个⭐，感谢😃！
 
-**Demo地址**：<https://fengfengfeng-up.github.io/library/vue-juejin-comment>
+**Demo地址**：<https://fengfengfeng-up.github.io/my-docs/library/vue-juejin-comment.html>
 
 ## 安装
 

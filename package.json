@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "description": "A comment component built by vue which is like juejin style",
-  "main": "index.js",
+  "main": "dist/vue-juejin-comment.umd.min",
   "keywords": [
     "vue",
-    "component"
+    "components",
+    "comment"
   ],
   "homepage": "https://fengfengfeng-up.github.io/components/vue-juejin-comment",
   "repository": {
@@ -18,6 +19,7 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
+    "lib": "vue-cli-service build --target lib --name vue-juejin-comment --dest dist ./index.js",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {

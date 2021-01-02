@@ -1,3 +1,7 @@
 import component from './src/components/Comment/index.vue'
 
-export default component || component.default
+component.install = function(Vue) {
+  Vue.component(component.name, component)
+}
+
+export default component
